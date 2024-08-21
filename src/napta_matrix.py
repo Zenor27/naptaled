@@ -6,7 +6,7 @@ def is_raspberry() -> bool:
     return os.uname().machine == 'armv6l'
 
 if is_raspberry():
-    from rgbmatrix import RGBMatrix, RGBMatrixOptions
+    from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 else:
-    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions
+    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics
 
