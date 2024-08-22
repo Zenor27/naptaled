@@ -1,9 +1,8 @@
 from pathlib import Path
 from PIL import Image
-import time
 from napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
 
-TRAIN_PATH = Path(__file__).parent.resolve() / "../assets/train.gif"
+TRAIN_PATH = Path(__file__).parent.resolve() / "../assets/train_curse.gif"
 
 
 @matrix_script
