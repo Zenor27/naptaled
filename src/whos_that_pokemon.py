@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-from doctest import debug
+import json
+import re
 import os
 import random
 import time
 import sys
 from typing import Iterable
-
+import requests
 from napta_matrix import RGBMatrix, matrix_script, graphics
 from PIL import Image
 
@@ -31,12 +32,21 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
 
     yield image_pixels
 
+
+def extract_number(s: str) -> int | None:
+    match = re.match(r"(\d+)", s)
+    if match:
+        return int(match.group(1))
+    return None
+
 def get_random_image():
     png_dir = "./pokemon_images"
     png_files = [f for f in os.listdir(png_dir) if f.endswith(".png")]
     if not png_files:
         sys.exit("No PNG files found in the directory")
-    return os.path.join(png_dir, random.choice(png_files))
+    png_file = random.choice(png_files)
+    pkmn_nbr = extract_number(png_file)
+    return os.path.join(png_dir, png_file), pkmn_nbr
 
 def print_first_text(matrix: RGBMatrix) -> None:
     offscreen_canvas = matrix.CreateFrameCanvas()
@@ -58,7 +68,7 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
     
     time.sleep(2)
     
-    image_file = get_random_image()
+    image_file, pkmn_nbr = get_random_image()
     image = Image.open(image_file)
 
     # Make image fit our screen.
@@ -73,6 +83,22 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
         matrix.SetImage(dst_image)
         time.sleep(0.01)
     
+    time.sleep(3)
+    
+    pkmn_json = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pkmn_nbr}").json()
+    name = pkmn_json["name"]
+    
+    offscreen_canvas = matrix.CreateFrameCanvas()
+    font = graphics.Font()
+    font.LoadFont("fonts/7x13.bdf")
+    text_color = graphics.Color(255, 255, 0)
+    
+    offscreen_canvas.Clear()
+    graphics.DrawText(offscreen_canvas, font, -2, 15, text_color, "It's")
+    graphics.DrawText(offscreen_canvas, font, 0, 30, text_color, name)
+
+    offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
+
     input("Press Enter to exit\n")
 
 if __name__ == "__main__":
