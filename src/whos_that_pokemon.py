@@ -34,23 +34,18 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
     
 def image_shadow(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
     image_pixel_len = len(image_pixels)
-    black_mask = [(0, 0, 0)] * image_pixel_len
     new_pixels = []
 
-    non_white_count = 0
 
     for i in range(image_pixel_len):
         pixel = image_pixels[i]
-        new_pixels.append((0, 0, 0))  # Add the pixel to the list
 
         if pixel != (255, 255, 255):  # Check if the pixel is not white
-            non_white_count += 1
+            new_pixels.append((0, 0, 0))  # Add the pixel to the list
+        else:
+            new_pixels.append(pixel)  # Add the pixel to the list
             
-            if non_white_count % 2 == 0:
-                # Add remaining black pixels to complete the image
-                completed_image = new_pixels + black_mask[len(new_pixels):]
-                yield completed_image
-                non_white_count = 0
+            
 
     yield image_pixels    
 
