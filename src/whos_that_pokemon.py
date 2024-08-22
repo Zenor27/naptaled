@@ -32,6 +32,30 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
 
     yield image_pixels
     
+def image_bottom_to_top(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
+    image_pixel_len = len(image_pixels)
+    black_mask = [(0, 0, 0)] * image_pixel_len
+    new_pixels = [None] * image_pixel_len  # Start with a list of None
+
+    non_white_count = 0
+
+    # Iterate through the pixels in reverse order (bottom left to top right)
+    for i in range(image_pixel_len - 1, -1, -1):
+        pixel = image_pixels[i]
+        new_pixels[i] = pixel  # Add the pixel to the appropriate position
+
+        if pixel != (255, 255, 255):  # Check if the pixel is not white
+            non_white_count += 1
+            
+            if non_white_count % 2 == 0:
+                # Add remaining black pixels to complete the image
+                completed_image = [(p if p is not None else (0, 0, 0)) for p in new_pixels]
+                yield completed_image
+                non_white_count = 0
+
+    yield image_pixels  # Finally, yield the complete image
+    
+    
 def image_shadow(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
     image_pixel_len = len(image_pixels)
     new_pixels = []
@@ -49,7 +73,7 @@ def image_shadow(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tupl
 
     yield new_pixels    
 
-
+image_heuristic = [image_pixel_by_pixel, image_bottom_to_top, image_shadow]
 
 def extract_number(s: str) -> int:
     match = re.match(r"(\d+)", s)
@@ -95,7 +119,7 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
     # Get the RGB data from the converted image pixel by pixel.
     converted_image_pixels: list[tuple[int, int, int]] = list(converted_image.getdata())
     
-    for image_pixels in image_shadow(converted_image_pixels):
+    for image_pixels in random.choice(image_heuristic)(converted_image_pixels):
         dst_image = Image.new('RGB', (matrix.width, matrix.height))
         dst_image.putdata(image_pixels)  # Place pixels in the new image.
         matrix.SetImage(dst_image)
@@ -103,8 +127,8 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
     
     time.sleep(3)
     
-    pkmn_json = requests.get(f"https://pokeapi.co/api/v2/pokemon/{pkmn_nbr}").json()
-    name = pkmn_json["name"]
+    pkmn_json = requests.get(f"https://tyradex.vercel.app/api/v1/pokemon/{pkmn_nbr}").json()
+    name = pkmn_json["name"]["fr"]
     
     offscreen_canvas = matrix.CreateFrameCanvas()
     font = graphics.Font()
@@ -117,7 +141,8 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
 
     offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
 
-    input("Press Enter to exit\n")
+    time.sleep(2)
 
 if __name__ == "__main__":
-    whos_that_pokemon()
+    for i in range(5):
+        whos_that_pokemon()
