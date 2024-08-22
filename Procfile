@@ -1,0 +1,1 @@
+worker: python src/display_screensaver.py
