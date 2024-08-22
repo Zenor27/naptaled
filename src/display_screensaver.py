@@ -4,12 +4,8 @@ from PIL import ImageDraw
 import time
 from napta_matrix import RGBMatrix, matrix_script
 from helpers.draw import draw_pattern
+from helpers.napta_colors import NaptaColor
 
-NAPTA_GREEN = (9, 203, 156)
-NAPTA_SPRAY = (117, 221, 221)
-NAPTA_INDIGO = (84, 5, 255)
-NAPTA_GORSE = (249, 229, 64)
-RED = (255, 0, 0)
 
 LOGO_HEIGHT = 12
 LOGO_WIDTH = 16
@@ -37,10 +33,10 @@ def display_image(matrix: RGBMatrix) -> None:
             🟩🟩🟩⬛⬛⬛⬛⬛🟩🟩🟩⬛⬛🟨🟨⬛
         """,
         {
-            "🟩": NAPTA_GREEN,
-            "🟦": NAPTA_SPRAY,
-            "🟪": NAPTA_INDIGO,
-            "🟨": NAPTA_GORSE,
+            "🟩": NaptaColor.GREEN,
+            "🟦": NaptaColor.SPRAY,
+            "🟪": NaptaColor.INDIGO,
+            "🟨": NaptaColor.GORSE,
         },
     )
 
