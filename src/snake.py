@@ -48,25 +48,26 @@ async def main(matrix: RGBMatrix) -> None:
         return maybe_apple
 
     apple = get_next_apple()
-    eating_apples = list[tuple[int, int]]()
+    eating_apples = set[tuple[int, int]]()
     dir = Dir.RIGHT
 
-    def draw() -> None:
-        image = Image.new("RGB", (BOARD_SIZE, BOARD_SIZE))
-        drawer = ImageDraw.Draw(image)
-        drawer.point(snake, fill=NaptaColor.BITTERSWEET)
-        drawer.point(eating_apples, fill=NaptaColor.GORSE)
-        drawer.point(apple, fill=NaptaColor.GREEN)
-        matrix.Clear()
-        matrix.SetImage(image, 0, 0)
+    image = Image.new("RGB", (BOARD_SIZE, BOARD_SIZE))
+    draw = ImageDraw.Draw(image)
+    draw.point(snake, NaptaColor.BITTERSWEET)
+    draw.point(apple, NaptaColor.GREEN)
+    matrix.SetImage(image, 0, 0)
 
-    def update_pos() -> None:
+    def draw_point(pix: tuple[int, int], color: tuple[int, int, int]) -> None:
+        matrix.SetPixel(*pix, *color)
+
+    def update_game() -> None:
         nonlocal apple, dir
 
         if snake[-1] in eating_apples:
             eating_apples.remove(snake[-1])
         else:
-            snake.pop()
+            poped = snake.pop()
+            draw_point(poped, (0, 0, 0))
 
         head_x, head_y = snake[0]
         if dir == Dir.UP:
@@ -79,14 +80,19 @@ async def main(matrix: RGBMatrix) -> None:
             new_head = (head_x - 1) % BOARD_SIZE, head_y
 
         if new_head == apple:
-            eating_apples.append(apple)
+            eating_apples.add(apple)
             apple = get_next_apple()
+            draw_point(apple, NaptaColor.GREEN)
+
+        for eating_apple in eating_apples:
+            draw_point(eating_apple, NaptaColor.GORSE)
 
         if new_head in snake:
             raise RuntimeError("U NOOB")
+
+        draw_point(new_head, NaptaColor.BITTERSWEET)
         snake.appendleft(new_head)
 
-    draw()
     print("=========================================================================")
     print("Prepare your next direction with arrow keys, then press Enter to apply it")
     print("=========================================================================")
@@ -99,8 +105,7 @@ async def main(matrix: RGBMatrix) -> None:
             dir = get_dir_task.result()
             get_dir_task = asyncio.create_task(get_dir(dir))
 
-        update_pos()
-        draw()
+        update_game()
 
 
 @matrix_script
