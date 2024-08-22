@@ -31,6 +31,29 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
                 non_white_count = 0
 
     yield image_pixels
+    
+def image_shadow(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
+    image_pixel_len = len(image_pixels)
+    black_mask = [(0, 0, 0)] * image_pixel_len
+    new_pixels = []
+
+    non_white_count = 0
+
+    for i in range(image_pixel_len):
+        pixel = image_pixels[i]
+        new_pixels.append((0, 0, 0))  # Add the pixel to the list
+
+        if pixel != (255, 255, 255):  # Check if the pixel is not white
+            non_white_count += 1
+            
+            if non_white_count % 2 == 0:
+                # Add remaining black pixels to complete the image
+                completed_image = new_pixels + black_mask[len(new_pixels):]
+                yield completed_image
+                non_white_count = 0
+
+    yield image_pixels    
+
 
 
 def extract_number(s: str) -> int:
@@ -77,7 +100,7 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
     # Get the RGB data from the converted image pixel by pixel.
     converted_image_pixels: list[tuple[int, int, int]] = list(converted_image.getdata())
     
-    for image_pixels in image_pixel_by_pixel(converted_image_pixels):
+    for image_pixels in image_shadow(converted_image_pixels):
         dst_image = Image.new('RGB', (matrix.width, matrix.height))
         dst_image.putdata(image_pixels)  # Place pixels in the new image.
         matrix.SetImage(dst_image)
