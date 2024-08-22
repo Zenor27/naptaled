@@ -16,9 +16,8 @@ def display_image(matrix: RGBMatrix) -> None:
         for keyframe in range(image.n_frames):  # type: ignore[attr-defined]
             image.seek(keyframe)
             img_cpy = image.copy()
-            double_buffer.SetImage(img_cpy.resize((MATRIX_SIZE, MATRIX_SIZE)))
+            double_buffer.SetImage(img_cpy.convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE)))
             double_buffer = matrix.SwapOnVSync(double_buffer)
-            time.sleep(0.1)
 
 
 if __name__ == "__main__":
