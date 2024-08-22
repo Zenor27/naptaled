@@ -27,10 +27,10 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
                 # Add remaining black pixels to complete the image
                 completed_image = new_pixels + black_mask[len(new_pixels):]
                 yield completed_image
-            non_white_count = 0
+                non_white_count = 0
 
     yield image_pixels
-        
+
 def get_random_image():
     png_dir = "./pokemon_images"
     png_files = [f for f in os.listdir(png_dir) if f.endswith(".png")]
