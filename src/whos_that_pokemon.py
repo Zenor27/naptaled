@@ -33,11 +33,11 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
     yield image_pixels
 
 
-def extract_number(s: str) -> int | None:
+def extract_number(s: str) -> int:
     match = re.match(r"(\d+)", s)
-    if match:
-        return int(match.group(1))
-    return None
+
+    return int(match.group(1))
+
 
 def get_random_image():
     png_dir = "./pokemon_images"
