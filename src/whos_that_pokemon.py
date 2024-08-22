@@ -47,7 +47,7 @@ def image_shadow(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tupl
             
             
 
-    yield image_pixels    
+    yield new_pixels    
 
 
 
