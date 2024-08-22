@@ -23,9 +23,10 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
         if pixel != (255, 255, 255):  # Check if the pixel is not white
             non_white_count += 1
             
-            # Add remaining black pixels to complete the image
-            completed_image = new_pixels + black_mask[len(new_pixels):]
-            yield completed_image
+            if non_white_count % 2 == 0:
+                # Add remaining black pixels to complete the image
+                completed_image = new_pixels + black_mask[len(new_pixels):]
+                yield completed_image
             non_white_count = 0
 
     yield image_pixels
@@ -69,7 +70,6 @@ def whos_that_pokemon(matrix: RGBMatrix) -> None:
     for image_pixels in image_pixel_by_pixel(converted_image_pixels):
         dst_image = Image.new('RGB', (matrix.width, matrix.height))
         dst_image.putdata(image_pixels)  # Place pixels in the new image.
-        matrix.Clear()
         matrix.SetImage(dst_image)
         time.sleep(0.01)
     
