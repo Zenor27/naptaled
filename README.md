@@ -42,3 +42,9 @@ git add <your changes>
 git commit -m "your message"
 ./deploy.sh
 ```
+
+To see logs running on the raspberry:
+
+```bash
+ssh 192.168.128.175 -p 1030 -l piku logs naptaled
+```

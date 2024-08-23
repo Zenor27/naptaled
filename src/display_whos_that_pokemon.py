@@ -8,7 +8,7 @@ from typing import Iterable
 import requests
 from PIL import Image
 
-from napta_matrix import RGBMatrix, graphics, matrix_script
+from src.napta_matrix import RGBMatrix, graphics, matrix_script
 
 
 def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
@@ -145,10 +145,10 @@ async def whos_that_pokemon(matrix: RGBMatrix) -> None:
     await asyncio.sleep(2)
 
 
-async def main() -> None:
+async def display_whos_that_pokemon() -> None:
     for i in range(5):
         await whos_that_pokemon()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(display_whos_that_pokemon())

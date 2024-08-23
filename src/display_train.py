@@ -3,13 +3,13 @@ from pathlib import Path
 
 from PIL import Image
 
-from napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
+from src.napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
 
 TRAIN_PATH = Path(__file__).parent.resolve() / "../assets/train.gif"
 
 
 @matrix_script
-async def display_image(matrix: RGBMatrix) -> None:
+async def display_train(matrix: RGBMatrix) -> None:
     image = Image.open(TRAIN_PATH.resolve())
 
     double_buffer = matrix.CreateFrameCanvas()
@@ -24,4 +24,4 @@ async def display_image(matrix: RGBMatrix) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(display_image())
+    asyncio.run(display_train())

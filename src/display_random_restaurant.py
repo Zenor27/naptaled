@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from napta_matrix import MATRIX_SIZE, RGBMatrix, graphics, matrix_script
+from src.napta_matrix import MATRIX_SIZE, RGBMatrix, graphics, matrix_script
 
 RESTAURANTS = [
     "Picard",

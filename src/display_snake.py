@@ -6,8 +6,8 @@ from random import randrange
 
 from PIL import Image, ImageDraw
 
-from helpers.napta_colors import NaptaColor
-from napta_matrix import RGBMatrix, matrix_script
+from src.helpers.napta_colors import NaptaColor
+from src.napta_matrix import RGBMatrix, matrix_script
 
 BOARD_SIZE = 64
 INITIAL_SNAKE_LEN = 4

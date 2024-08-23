@@ -3,16 +3,16 @@ from random import choice, randrange
 
 from PIL import Image, ImageDraw
 
-from helpers.draw import draw_pattern
-from helpers.napta_colors import NaptaColor
-from napta_matrix import RGBMatrix, matrix_script
+from src.helpers.draw import draw_pattern
+from src.helpers.napta_colors import NaptaColor
+from src.napta_matrix import RGBMatrix, matrix_script
 
 LOGO_HEIGHT = 12
 LOGO_WIDTH = 16
 
 
 @matrix_script
-async def display_image(matrix: RGBMatrix) -> None:
+async def display_screensaver(matrix: RGBMatrix) -> None:
     image = Image.new("RGB", (LOGO_WIDTH, LOGO_HEIGHT))
     draw = ImageDraw.Draw(image)
 
@@ -66,4 +66,4 @@ async def display_image(matrix: RGBMatrix) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(display_image())
+    asyncio.run(display_screensaver())
