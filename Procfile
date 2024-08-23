@@ -1,1 +1,1 @@
-worker: sudo python3 src/display_train.py
+worker: sudo python3 src/display_screensaver.py
