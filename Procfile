@@ -1,1 +1,1 @@
-worker: python src/display_screensaver.py
+worker: sudo python3 src/display_text.py
