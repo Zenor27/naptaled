@@ -1,9 +1,12 @@
-from math import ceil
+import asyncio
 import random
-from PIL import Image
-from napta_matrix import MATRIX_SIZE, RGBMatrix, graphics, matrix_script
-from pathlib import Path
 import time
+from math import ceil
+from pathlib import Path
+
+from PIL import Image
+
+from napta_matrix import MATRIX_SIZE, RGBMatrix, graphics, matrix_script
 
 RESTAURANTS = [
     "Picard",
@@ -30,7 +33,7 @@ WHEEL_PATH = Path(__file__).parent.resolve() / "../assets/wheel.gif"
 
 
 @matrix_script
-def display_random_restaurant(matrix: RGBMatrix) -> None:
+async def display_random_restaurant(matrix: RGBMatrix) -> None:
     offscreen_canvas = matrix.CreateFrameCanvas()
 
     font = graphics.Font()
@@ -69,7 +72,7 @@ def display_random_restaurant(matrix: RGBMatrix) -> None:
                 8: 0.1,
             }
             wheel_velocity = velocity_by_elapsed_time.get(ceil(_elapsed_seconds()), 0.1)
-            time.sleep(wheel_velocity)
+            await asyncio.sleep(wheel_velocity)
 
     restaurant = random.choice(RESTAURANTS)
     while True:
@@ -78,9 +81,9 @@ def display_random_restaurant(matrix: RGBMatrix) -> None:
         pos -= 1
         if pos + len < 0:
             pos = offscreen_canvas.width
-        time.sleep(0.05)
+        await asyncio.sleep(0.05)
         offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
 
 
 if __name__ == "__main__":
-    display_random_restaurant()
+    asyncio.run(display_random_restaurant())

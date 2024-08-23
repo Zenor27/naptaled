@@ -1,12 +1,15 @@
+import asyncio
 from pathlib import Path
+
 from PIL import Image
+
 from napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
 
 TRAIN_PATH = Path(__file__).parent.resolve() / "../assets/train.gif"
 
 
 @matrix_script
-def display_image(matrix: RGBMatrix) -> None:
+async def display_image(matrix: RGBMatrix) -> None:
     image = Image.open(TRAIN_PATH.resolve())
 
     double_buffer = matrix.CreateFrameCanvas()
@@ -17,7 +20,8 @@ def display_image(matrix: RGBMatrix) -> None:
             img_cpy = image.copy()
             double_buffer.SetImage(img_cpy.convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE)))
             double_buffer = matrix.SwapOnVSync(double_buffer)
+            await asyncio.sleep(0)
 
 
 if __name__ == "__main__":
-    display_image()
+    asyncio.run(display_image())

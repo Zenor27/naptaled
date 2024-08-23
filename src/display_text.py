@@ -1,10 +1,11 @@
-from napta_matrix import RGBMatrix, graphics, matrix_script
+import asyncio
 from pathlib import Path
-import time
+
+from napta_matrix import RGBMatrix, graphics, matrix_script
 
 
 @matrix_script
-def display_text(matrix: RGBMatrix) -> None:
+async def display_text(matrix: RGBMatrix) -> None:
     offscreen_canvas = matrix.CreateFrameCanvas()
 
     font = graphics.Font()
@@ -20,9 +21,9 @@ def display_text(matrix: RGBMatrix) -> None:
         pos -= 1
         if pos + len < 0:
             pos = offscreen_canvas.width
-        time.sleep(0.05)
+        await asyncio.sleep(0.05)
         offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
 
 
 if __name__ == "__main__":
-    display_text()
+    asyncio.run(display_text())

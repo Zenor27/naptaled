@@ -1,18 +1,18 @@
+import asyncio
 from random import choice, randrange
-from PIL import Image
-from PIL import ImageDraw
-import time
-from napta_matrix import RGBMatrix, matrix_script
+
+from PIL import Image, ImageDraw
+
 from helpers.draw import draw_pattern
 from helpers.napta_colors import NaptaColor
-
+from napta_matrix import RGBMatrix, matrix_script
 
 LOGO_HEIGHT = 12
 LOGO_WIDTH = 16
 
 
 @matrix_script
-def display_image(matrix: RGBMatrix) -> None:
+async def display_image(matrix: RGBMatrix) -> None:
     image = Image.new("RGB", (LOGO_WIDTH, LOGO_HEIGHT))
     draw = ImageDraw.Draw(image)
 
@@ -48,7 +48,7 @@ def display_image(matrix: RGBMatrix) -> None:
     while True:
         matrix.Clear()
         matrix.SetImage(image, x, y)
-        time.sleep(0.05)
+        await asyncio.sleep(0.05)
         x += dx
         y += dy
         if x < 0:
@@ -66,4 +66,4 @@ def display_image(matrix: RGBMatrix) -> None:
 
 
 if __name__ == "__main__":
-    display_image()
+    asyncio.run(display_image())

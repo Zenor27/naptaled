@@ -1,13 +1,13 @@
 import asyncio
-from collections import deque
 import enum
-from random import randrange
 import sys
-from PIL import Image
-from PIL import ImageDraw
-from napta_matrix import RGBMatrix, matrix_script
-from helpers.napta_colors import NaptaColor
+from collections import deque
+from random import randrange
 
+from PIL import Image, ImageDraw
+
+from helpers.napta_colors import NaptaColor
+from napta_matrix import RGBMatrix, matrix_script
 
 BOARD_SIZE = 64
 INITIAL_SNAKE_LEN = 4
@@ -39,7 +39,8 @@ async def get_dir(current_dir: Dir) -> Dir:
             return Dir.LEFT
 
 
-async def main(matrix: RGBMatrix) -> None:
+@matrix_script
+async def display_snake(matrix: RGBMatrix) -> None:
     snake = deque(((20 + i) % BOARD_SIZE, 40) for i in range(INITIAL_SNAKE_LEN, 0, -1))  # Head to queue
 
     def get_next_apple() -> tuple[int, int]:
@@ -108,10 +109,5 @@ async def main(matrix: RGBMatrix) -> None:
         update_game()
 
 
-@matrix_script
-def display_snake(matrix: RGBMatrix) -> None:
-    asyncio.run(main(matrix))
-
-
 if __name__ == "__main__":
-    display_snake()
+    asyncio.run(display_snake())
