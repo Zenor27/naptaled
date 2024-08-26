@@ -1,16 +1,15 @@
 import asyncio
 import enum
-import itertools
 import time
 from collections import deque
-from pathlib import Path
 from random import randrange
 
 from PIL import Image, ImageDraw
 
 from src.helpers.control import control_server
+from src.helpers.fullscreen_message import fullscreen_message
 from src.helpers.napta_colors import NaptaColor
-from src.napta_matrix import RGBMatrix, graphics, matrix_script
+from src.napta_matrix import RGBMatrix, matrix_script
 
 BOARD_SIZE = 64
 INITIAL_SNAKE_LEN = 4
@@ -36,21 +35,6 @@ def get_dir(current_dir: Dir, input: bytes) -> Dir:
         return Dir.LEFT
 
     return current_dir
-
-
-async def display_wait_for_message(matrix: RGBMatrix):
-    offscreen_canvas = matrix.CreateFrameCanvas()
-
-    font = graphics.Font()
-    font_path = Path(__file__).parent.parent / "fonts" / "5x7.bdf"
-    font.LoadFont(str(font_path.resolve()))
-
-    for text, line in zip(
-        ["Connect to", "play Snake:", "ssh 192.168", ".128.175", "-p 1030", "-l piku run", "naptaled co"],
-        itertools.count(10, 8),
-    ):
-        graphics.DrawText(offscreen_canvas, font, 3, line, NaptaColor.GORSE, text)
-    offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
 
 
 @matrix_script
@@ -102,22 +86,26 @@ async def display_snake(matrix: RGBMatrix) -> None:
             draw_point(eating_apple, NaptaColor.GORSE)
 
         if new_head in snake:
-            raise RuntimeError("U NOOB")
+            raise ValueError("U NOOB")
 
         draw_point(new_head, NaptaColor.BITTERSWEET)
         snake.appendleft(new_head)
 
-    await display_wait_for_message(matrix)
+    await fullscreen_message(matrix, ["Starting", "Snake game", "server..."])
+    on_started = fullscreen_message(
+        matrix, ["Connect to", "play Snake:", "./play.sh", "in the repo", "(Web client", "incoming)"]
+    )
 
-    async with control_server(n_clients=1) as server:
+    async with control_server(n_clients=1, on_started=on_started) as server:
         matrix.SetImage(image, 0, 0)
+        timeout = 1 / FPS
 
         while True:
             t_start = time.time()
             try:
-                input = await asyncio.wait_for(server.clients[-1].read(1000), timeout=1 / FPS)
+                input = await asyncio.wait_for(server.clients[-1].read(32), timeout=timeout)
                 dir = get_dir(dir, input)
-            except TimeoutError:
+            except asyncio.TimeoutError:
                 pass
 
             update_game()

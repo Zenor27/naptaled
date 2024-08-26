@@ -1,9 +1,12 @@
+import logging
 import os
 from collections.abc import Callable, Coroutine
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Any
 
 from typing_extensions import Concatenate, ParamSpec
+
+from src.helpers.napta_colors import NaptaColor
 
 MATRIX_SIZE = 64
 
@@ -41,8 +44,18 @@ def matrix_script(
     async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
         matrix = _get_matrix()
         matrix.Clear()
+        try:
+            await function(matrix, *args, **kwargs)
+        except Exception:
+            from src.helpers.fullscreen_message import fullscreen_message
 
-        await function(matrix, *args, **kwargs)
+            logging.exception(f"Fatal error in program {function.__name__!r}: ", exc_info=True)
+            await fullscreen_message(
+                matrix,
+                ["Fatal error", "in program", function.__name__.removeprefix("display_")],
+                color=NaptaColor.BITTERSWEET,
+            )
+            raise
 
     return wrapper
 

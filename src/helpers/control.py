@@ -1,10 +1,11 @@
 import asyncio
-from collections.abc import AsyncIterator
+import logging
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 
 from src.helpers import ainput
 
-SOCKET_NAME = "naptaled_control"
+SERVER_PORT = 4422
 
 
 class ControlServer:
@@ -13,13 +14,16 @@ class ControlServer:
 
 
 @asynccontextmanager
-async def control_server(n_clients: int) -> AsyncIterator[ControlServer]:
+async def control_server(n_clients: int, on_started: Awaitable[None]) -> AsyncIterator[ControlServer]:
     server = ControlServer()
 
     def client_connected(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         server.clients.append(reader)
 
-    async with await asyncio.start_unix_server(client_connected, SOCKET_NAME):
+    logging.info(f"Creating TCP server on port {SERVER_PORT}...")
+    async with await asyncio.start_server(client_connected, host="0.0.0.0", port=SERVER_PORT):
+        logging.info("Server ready!")
+        await on_started
         while len(server.clients) < n_clients:
             await asyncio.sleep(1)
 
@@ -28,7 +32,7 @@ async def control_server(n_clients: int) -> AsyncIterator[ControlServer]:
 
 async def connect_to_server() -> None:
     print("Connecting...")
-    reader, writer = await asyncio.open_unix_connection(SOCKET_NAME)
+    reader, writer = await asyncio.open_connection(host="192.168.128.175", port=SERVER_PORT)
     print("Connected!")
 
     with ainput.capture_terminal() as get_input:
