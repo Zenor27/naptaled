@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from collections.abc import Callable, Coroutine
@@ -47,14 +48,18 @@ def matrix_script(
         try:
             await function(matrix, *args, **kwargs)
         except Exception:
+            from src.display_screensaver import display_screensaver
             from src.helpers.fullscreen_message import fullscreen_message
 
             logging.exception(f"Fatal error in program {function.__name__!r}: ", exc_info=True)
+            program_name = function.__name__.removeprefix("display_")
             await fullscreen_message(
                 matrix,
-                ["Fatal error", "in program", function.__name__.removeprefix("display_")],
+                ["Fatal error", "in program", program_name, "", "Restarting", "in a few", "seconds..."],
                 color=NaptaColor.BITTERSWEET,
             )
+            await asyncio.sleep(5)
+            await asyncio.create_task(display_screensaver())
             raise
 
     return wrapper
