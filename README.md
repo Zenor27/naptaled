@@ -27,10 +27,24 @@ Then on your machine you need to add the remote
 git remote add piku piku@192.168.128.175:naptaled
 ```
 
+And you need to add the following to your `~/.ssh/config`:
+
+```
+Host 192.168.128.175
+ Hostname 192.168.128.175
+ Port 1030
+```
+
 You are good to go, you can now deploy to the raspberry
 
 ```bash
 git add <your changes>
 git commit -m "your message"
 ./deploy.sh
+```
+
+To see logs running on the raspberry:
+
+```bash
+ssh 192.168.128.175 -p 1030 -l piku logs naptaled
 ```

@@ -1,6 +1,7 @@
 from collections import defaultdict
-from PIL.ImageDraw import ImageDraw
 from textwrap import dedent
+
+from PIL.ImageDraw import ImageDraw
 
 
 def draw_pattern(
