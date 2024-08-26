@@ -1,0 +1,5 @@
+#!/bin/bash
+# Entry point for SSH connections to connect to a control server.
+
+export PYTHONPATH=".":$PYTHONPATH
+python3 src/client_connect.py

@@ -1,16 +1,20 @@
 import asyncio
 import enum
-import sys
+import itertools
+import time
 from collections import deque
+from pathlib import Path
 from random import randrange
 
 from PIL import Image, ImageDraw
 
+from src.helpers.control import control_server
 from src.helpers.napta_colors import NaptaColor
-from src.napta_matrix import RGBMatrix, matrix_script
+from src.napta_matrix import RGBMatrix, graphics, matrix_script
 
 BOARD_SIZE = 64
 INITIAL_SNAKE_LEN = 4
+FPS = 20
 
 
 class Dir(enum.Enum):
@@ -20,23 +24,33 @@ class Dir(enum.Enum):
     LEFT = enum.auto()
 
 
-async def ainput() -> bytes:
-    """Cf. https://stackoverflow.com/a/76183977"""
-    return await asyncio.to_thread(sys.stdin.buffer.readline)
+def get_dir(current_dir: Dir, input: bytes) -> Dir:
+    last_press = input[-3:]
+    if last_press == b"\x1b[A" and current_dir in (Dir.LEFT, Dir.RIGHT):
+        return Dir.UP
+    elif last_press == b"\x1b[B" and current_dir in (Dir.LEFT, Dir.RIGHT):
+        return Dir.DOWN
+    elif last_press == b"\x1b[C" and current_dir in (Dir.UP, Dir.DOWN):
+        return Dir.RIGHT
+    elif last_press == b"\x1b[D" and current_dir in (Dir.UP, Dir.DOWN):
+        return Dir.LEFT
+
+    return current_dir
 
 
-async def get_dir(current_dir: Dir) -> Dir:
-    while True:
-        inp = await ainput()
-        last_press = inp[-4:-1]
-        if last_press == b"\x1b[A" and current_dir in (Dir.LEFT, Dir.RIGHT):
-            return Dir.UP
-        elif last_press == b"\x1b[B" and current_dir in (Dir.LEFT, Dir.RIGHT):
-            return Dir.DOWN
-        elif last_press == b"\x1b[C" and current_dir in (Dir.UP, Dir.DOWN):
-            return Dir.RIGHT
-        elif last_press == b"\x1b[D" and current_dir in (Dir.UP, Dir.DOWN):
-            return Dir.LEFT
+async def display_wait_for_message(matrix: RGBMatrix):
+    offscreen_canvas = matrix.CreateFrameCanvas()
+
+    font = graphics.Font()
+    font_path = Path(__file__).parent.parent / "fonts" / "5x7.bdf"
+    font.LoadFont(str(font_path.resolve()))
+
+    for text, line in zip(
+        ["Connect to", "play Snake:", "ssh 192.168", ".128.175", "-p 1030", "-l piku run", "naptaled co"],
+        itertools.count(10, 8),
+    ):
+        graphics.DrawText(offscreen_canvas, font, 3, line, NaptaColor.GORSE, text)
+    offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
 
 
 @matrix_script
@@ -56,7 +70,6 @@ async def display_snake(matrix: RGBMatrix) -> None:
     draw = ImageDraw.Draw(image)
     draw.point(snake, NaptaColor.BITTERSWEET)
     draw.point(apple, NaptaColor.GREEN)
-    matrix.SetImage(image, 0, 0)
 
     def draw_point(pix: tuple[int, int], color: tuple[int, int, int]) -> None:
         matrix.SetPixel(*pix, *color)
@@ -94,19 +107,21 @@ async def display_snake(matrix: RGBMatrix) -> None:
         draw_point(new_head, NaptaColor.BITTERSWEET)
         snake.appendleft(new_head)
 
-    print("=========================================================================")
-    print("Prepare your next direction with arrow keys, then press Enter to apply it")
-    print("=========================================================================")
+    await display_wait_for_message(matrix)
 
-    get_dir_task = asyncio.create_task(get_dir(dir))
+    async with control_server(n_clients=1) as server:
+        matrix.SetImage(image, 0, 0)
 
-    while True:
-        await asyncio.wait([get_dir_task], timeout=0.05)
-        if get_dir_task.done():
-            dir = get_dir_task.result()
-            get_dir_task = asyncio.create_task(get_dir(dir))
+        while True:
+            t_start = time.time()
+            try:
+                input = await asyncio.wait_for(server.clients[-1].read(1000), timeout=1 / FPS)
+                dir = get_dir(dir, input)
+            except TimeoutError:
+                pass
 
-        update_game()
+            update_game()
+            await asyncio.sleep(1 / FPS - (time.time() - t_start))
 
 
 if __name__ == "__main__":
