@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator, Awaitable, Collection
 from contextlib import asynccontextmanager
 
 from src.helpers import ainput
@@ -10,19 +10,28 @@ SERVER_PORT = 4422
 INP = b"INP\n"
 RDY = b"RDY\n"
 
+
 class ControlServer:
     def __init__(self) -> None:
         self.clients = dict[str, asyncio.StreamReader]()
 
 
 @asynccontextmanager
-async def control_server(client_names: list[str], on_started: Awaitable[None]) -> AsyncIterator[ControlServer]:
+async def control_server(
+    client_names: Collection[str],
+    min_clients: int | None = None,
+    on_started: Awaitable[None] | None = None,
+) -> AsyncIterator[ControlServer]:
+    if min_clients is None:
+        min_clients = len(client_names)
     _client_names = [name.encode() for name in client_names]
     server = ControlServer()
 
-    async def client_connected(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    async def client_connected(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
         if len(client_names) == 1:
-            client_name = client_names[0]
+            [client_name] = client_names
         else:
             while True:
                 writer.write(b"Who are you? (choices: %s)\n" % b", ".join(_client_names))
@@ -41,16 +50,17 @@ async def control_server(client_names: list[str], on_started: Awaitable[None]) -
     logging.info(f"Creating TCP server on port {SERVER_PORT}...")
     async with await asyncio.start_server(client_connected, host="0.0.0.0", port=SERVER_PORT):
         logging.info("Server ready!")
-        await on_started
-        while len(server.clients) < len(client_names):
+        if on_started:
+            await on_started
+        while len(server.clients) < min_clients:
             await asyncio.sleep(1)
 
         yield server
 
 
-async def connect_to_server() -> None:
+async def connect_to_server(host: str) -> None:
     print("Connecting...")
-    reader, writer = await asyncio.open_connection(host="192.168.128.175", port=SERVER_PORT)
+    reader, writer = await asyncio.open_connection(host=host, port=SERVER_PORT)
     print("Connected!")
     while True:
         message = await reader.readuntil(b"\n")
