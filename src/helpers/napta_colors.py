@@ -2,6 +2,7 @@ import enum
 
 
 class NaptaColor(tuple[int, int, int], enum.Enum):
+    OFF = (0, 0, 0)
     GREEN = (9, 203, 156)
     BLUE = (0, 55, 85)
     SPRAY = (117, 221, 221)

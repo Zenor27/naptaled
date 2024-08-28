@@ -65,7 +65,7 @@ async def display_snake(matrix: RGBMatrix) -> None:
             eating_apples.remove(snake[-1])
         else:
             poped = snake.pop()
-            draw_point(poped, (0, 0, 0))
+            draw_point(poped, NaptaColor.OFF)
 
         head_x, head_y = snake[0]
         if dir == Dir.UP:
@@ -96,14 +96,14 @@ async def display_snake(matrix: RGBMatrix) -> None:
         matrix, ["Connect to", "play Snake:", "./play.sh", "in the repo", "(Web client", "incoming)"]
     )
 
-    async with control_server(n_clients=1, on_started=on_started) as server:
+    async with control_server(client_names=["P"], on_started=on_started) as server:
         matrix.SetImage(image, 0, 0)
         timeout = 1 / FPS
 
         while True:
             t_start = time.time()
             try:
-                input = await asyncio.wait_for(server.clients[-1].read(32), timeout=timeout)
+                input = await asyncio.wait_for(server.clients["P"].read(32), timeout=timeout)
                 dir = get_dir(dir, input)
             except asyncio.TimeoutError:
                 pass

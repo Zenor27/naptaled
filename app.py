@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from src.display_pong import display_pong
 from src.display_random_restaurant import display_random_restaurant
 from src.display_screensaver import display_screensaver
 from src.display_snake import display_snake
@@ -70,4 +71,10 @@ async def run_text(text: str):
 @app.get("/random_restaurant")
 async def run_random_restaurant():
     switch_program(display_random_restaurant())
+    return "OK"
+
+
+@app.get("/pong")
+async def run_pong():
+    switch_program(display_pong())
     return "OK"
