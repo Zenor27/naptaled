@@ -20,7 +20,11 @@ def is_raspberry() -> bool:
 if is_raspberry() and not TYPE_CHECKING:
     from rgbmatrix import RGBMatrix, RGBMatrixOptions, graphics
 else:
-    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions, graphics  # pyright: ignore[reportMissingTypeStubs]
+    from RGBMatrixEmulator import (
+        RGBMatrix,
+        RGBMatrixOptions,
+        graphics,
+    )  # pyright: ignore[reportMissingTypeStubs]
 
 
 _P = ParamSpec("_P")
@@ -38,9 +42,15 @@ def _get_matrix() -> RGBMatrix:
     return RGBMatrix(options=options)
 
 
+MATRIX_SCRIPTS = dict[
+    str, Callable[Concatenate[RGBMatrix, _P], Coroutine[Any, Any, None]]
+]()
+
+
 def matrix_script(
     function: Callable[Concatenate[RGBMatrix, _P], Coroutine[Any, Any, None]],
 ) -> Callable[_P, Coroutine[Any, Any, None]]:
+
     @wraps(function)
     async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
         matrix = _get_matrix()
@@ -51,16 +61,28 @@ def matrix_script(
             from src.display_screensaver import display_screensaver
             from src.helpers.fullscreen_message import fullscreen_message
 
-            logging.exception(f"Fatal error in program {function.__name__!r}: ", exc_info=True)
+            logging.exception(
+                f"Fatal error in program {function.__name__!r}: ", exc_info=True
+            )
             program_name = function.__name__.removeprefix("display_")
             await fullscreen_message(
                 matrix,
-                ["Fatal error", "in program", program_name, "", "Restarting", "in a few", "seconds..."],
+                [
+                    "Fatal error",
+                    "in program",
+                    program_name,
+                    "",
+                    "Restarting",
+                    "in a few",
+                    "seconds...",
+                ],
                 color=NaptaColor.BITTERSWEET,
             )
             await asyncio.sleep(5)
             await asyncio.create_task(display_screensaver())
             raise
+
+    MATRIX_SCRIPTS[function.__name__] = wrapper
 
     return wrapper
 

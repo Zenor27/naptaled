@@ -5,13 +5,13 @@ from typing import Any
 
 from fastapi import FastAPI
 
-from src.display_pong import display_pong
-from src.display_random_restaurant import display_random_restaurant
 from src.display_screensaver import display_screensaver
-from src.display_snake import display_snake
-from src.display_text import display_text
-from src.display_train import display_train
-from src.display_whos_that_pokemon import display_whos_that_pokemon
+from src.napta_matrix import MATRIX_SCRIPTS
+from pydantic import BaseModel
+
+
+from fastapi.middleware.cors import CORSMiddleware
+
 
 DEFAULT_PROGRAM = display_screensaver()
 
@@ -37,44 +37,25 @@ def switch_program(program: Coroutine[Any, Any, None]) -> None:
 
 app = FastAPI(lifespan=lifespan)
 
-
-@app.get("/screensaver")
-async def run_screensaver():
-    switch_program(display_screensaver())
-    return "OK"
-
-
-@app.get("/train")
-async def run_train():
-    switch_program(display_train())
-    return "OK"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 
-@app.get("/snake")
-async def run_snake():
-    switch_program(display_snake())
-    return "OK"
+@app.get("/scripts", operation_id="get_scripts")
+async def scripts() -> list[str]:
+    return list(MATRIX_SCRIPTS.keys())
 
 
-@app.get("/wtp")
-async def run_wtp():
-    switch_program(display_whos_that_pokemon())
-    return "OK"
+class ChangeScriptRequest(BaseModel):
+    script: str
 
 
-@app.get("/text")
-async def run_text(text: str):
-    switch_program(display_text(text))
-    return "OK"
-
-
-@app.get("/random_restaurant")
-async def run_random_restaurant():
-    switch_program(display_random_restaurant())
-    return "OK"
-
-
-@app.get("/pong")
-async def run_pong():
-    switch_program(display_pong())
+@app.post("/scripts/change", operation_id="post_change_script")
+async def change_script(change_script_request: ChangeScriptRequest):
+    script = MATRIX_SCRIPTS[change_script_request.script]
+    switch_program(script())
     return "OK"

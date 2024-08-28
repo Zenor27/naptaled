@@ -9,6 +9,21 @@ pip install -r requirements.txt
 python src/display_image.py
 ```
 
+## Run FastAPI locally
+
+> Make sure you have the virtual environment activated
+
+```bash
+fastapi dev app.py --port 8042
+```
+
+## Run Client locally
+
+```bash
+cd client/
+pnpm install
+pnpm dev
+```
 
 ## How to deploy
 
