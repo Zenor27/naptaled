@@ -50,7 +50,7 @@ async def control_server(client_names: list[str], on_started: Awaitable[None]) -
 
 async def connect_to_server() -> None:
     print("Connecting...")
-    reader, writer = await asyncio.open_connection(host="127.0.0.1", port=SERVER_PORT)
+    reader, writer = await asyncio.open_connection(host="192.168.128.175", port=SERVER_PORT)
     print("Connected!")
     while True:
         message = await reader.readuntil(b"\n")
