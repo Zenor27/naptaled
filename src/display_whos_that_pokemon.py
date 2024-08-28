@@ -3,7 +3,7 @@ import os
 import random
 import re
 import sys
-from typing import Iterable
+from typing import Iterable, Optional
 
 import requests
 from PIL import Image
@@ -36,7 +36,7 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
 
 def image_bottom_to_top(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
     image_pixel_len = len(image_pixels)
-    new_pixels: list[tuple[int, int, int] | None] = [None] * image_pixel_len  # Start with a list of None
+    new_pixels: list[Optional[tuple[int, int, int]]] = [None] * image_pixel_len  # Start with a list of None
 
     non_white_count = 0
 

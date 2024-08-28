@@ -2,7 +2,7 @@ import asyncio
 import math
 import random
 import time
-from typing import Literal
+from typing import Literal, Optional
 
 from src.helpers.control import control_server
 from src.helpers.digits import DIGIT_PATTERNS
@@ -23,7 +23,7 @@ BORDER_LEFT = 4
 BORDER_RIGHT = BOARD_SIZE - 4
 
 
-def get_pos(y: int, input: bytes | None) -> int:
+def get_pos(y: int, input: Optional[bytes]) -> int:
     last_press = (input or b"")[-3:]
     if last_press == b"\x1b[A" and y > BORDER_TOP:
         return y - 1
