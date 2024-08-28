@@ -42,15 +42,12 @@ def _get_matrix() -> RGBMatrix:
     return RGBMatrix(options=options)
 
 
-MATRIX_SCRIPTS = dict[
-    str, Callable[Concatenate[RGBMatrix, _P], Coroutine[Any, Any, None]]
-]()
+MATRIX_SCRIPTS = dict[str, Callable[..., Coroutine[Any, Any, None]]]()
 
 
 def matrix_script(
     function: Callable[Concatenate[RGBMatrix, _P], Coroutine[Any, Any, None]],
 ) -> Callable[_P, Coroutine[Any, Any, None]]:
-
     @wraps(function)
     async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
         matrix = _get_matrix()
@@ -61,9 +58,7 @@ def matrix_script(
             from src.display_screensaver import display_screensaver
             from src.helpers.fullscreen_message import fullscreen_message
 
-            logging.exception(
-                f"Fatal error in program {function.__name__!r}: ", exc_info=True
-            )
+            logging.exception(f"Fatal error in program {function.__name__!r}: ", exc_info=True)
             program_name = function.__name__.removeprefix("display_")
             await fullscreen_message(
                 matrix,
