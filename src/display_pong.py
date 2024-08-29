@@ -41,9 +41,9 @@ def get_x_pos(x: int, input: Optional[bytes]) -> int:
 
 
 # Adjust coeffs: https://www.desmos.com/calculator/t6ewhvgb9w
-A = 0.5
+A = 0.4
 B = 1.5
-C = 0.75
+C = 0.85
 D = 0.5
 
 
@@ -51,7 +51,9 @@ def get_ball_speed(n_bounces: int) -> float:
     return A * math.log(B * n_bounces + D) + C
 
 
-def get_post_y_bounce_speed(yb: float, y_paddle: int, dx_sign: Literal[1, -1], n_bounces: int) -> tuple[float, float]:
+def get_post_y_bounce_speed(
+    yb: float, y_paddle: int, dx_sign: Literal[1, -1], n_bounces: int
+) -> tuple[float, float]:
     dist_from_paddle_mid = yb - (y_paddle + PADDLE_SIZE / 2)
     new_angle = (dist_from_paddle_mid / PADDLE_SIZE) * MAX_ANGLE / 180 * math.pi
     speed = get_ball_speed(n_bounces)
@@ -60,7 +62,9 @@ def get_post_y_bounce_speed(yb: float, y_paddle: int, dx_sign: Literal[1, -1], n
     return dx, dy
 
 
-def get_post_x_bounce_speed(xb: float, x_paddle: int, dy_sign: Literal[1, -1], n_bounces: int) -> tuple[float, float]:
+def get_post_x_bounce_speed(
+    xb: float, x_paddle: int, dy_sign: Literal[1, -1], n_bounces: int
+) -> tuple[float, float]:
     dist_from_paddle_mid = xb - (x_paddle + PADDLE_SIZE / 2)
     new_angle = (dist_from_paddle_mid / PADDLE_SIZE) * MAX_ANGLE / 180 * math.pi
     speed = get_ball_speed(n_bounces)
@@ -71,7 +75,11 @@ def get_post_x_bounce_speed(xb: float, x_paddle: int, dy_sign: Literal[1, -1], n
 
 def _paddle_points(z: int, p: Literal[1, 2, 3, 4]) -> set[tuple[int, int]]:
     x = 1 if p % 2 else BOARD_SIZE - 3
-    return {(xp, yp) if p <= 2 else (yp, xp) for yp in range(z, z + PADDLE_SIZE) for xp in (x, x + 1)}
+    return {
+        (xp, yp) if p <= 2 else (yp, xp)
+        for yp in range(z, z + PADDLE_SIZE)
+        for xp in (x, x + 1)
+    }
 
 
 def _score_points(score: int, player: Literal[1, 2, 3, 4]) -> set[tuple[int, int]]:
@@ -80,7 +88,9 @@ def _score_points(score: int, player: Literal[1, 2, 3, 4]) -> set[tuple[int, int
     return {
         point
         for i, digit in enumerate(int(x) for x in str(score))
-        for point in pattern_to_points(DIGIT_PATTERNS[digit], origin_x=origin_x + (6 * i), origin_y=origin_y)
+        for point in pattern_to_points(
+            DIGIT_PATTERNS[digit], origin_x=origin_x + (6 * i), origin_y=origin_y
+        )
     }
 
 
@@ -93,14 +103,22 @@ async def display_pong(matrix: RGBMatrix) -> None:
     x3 = x4 = (BOARD_SIZE - PADDLE_SIZE) // 2
     y1_points = y2_points = x3_points = x4_points = set[tuple[int, int]]()
     border_points = {
-        (x, y) for x in range(BORDER_LEFT - 1, BORDER_RIGHT + 2) for y in (BORDER_TOP - 1, BORDER_BOTTOM + 1)
-    } | {(x, y) for y in range(BORDER_TOP - 1, BORDER_BOTTOM + 2) for x in (BORDER_LEFT - 1, BORDER_RIGHT + 1)}
+        (x, y)
+        for x in range(BORDER_LEFT - 1, BORDER_RIGHT + 2)
+        for y in (BORDER_TOP - 1, BORDER_BOTTOM + 1)
+    } | {
+        (x, y)
+        for y in range(BORDER_TOP - 1, BORDER_BOTTOM + 2)
+        for x in (BORDER_LEFT - 1, BORDER_RIGHT + 1)
+    }
     n_players = 2
     n_bounces = 0
     last_touch: Literal[0, 1, 2, 3, 4] = 0
 
     score1 = score2 = score3 = score4 = -1
-    score1_points = score2_points = score3_points = score4_points = set[tuple[int, int]]()
+    score1_points = score2_points = score3_points = score4_points = set[
+        tuple[int, int]
+    ]()
 
     def place_ball() -> tuple[float, float, float, float, tuple[int, int]]:
         nonlocal y1, y2, y1_points, y2_points, xb, yb, dx, dy, n_bounces, last_touch
@@ -112,7 +130,10 @@ async def display_pong(matrix: RGBMatrix) -> None:
         if n_players >= 4:
             pi_positions.append(1.5)  # Bottom
 
-        angle = (random.uniform(-MAX_ANGLE / 360, MAX_ANGLE / 360) + random.choice(pi_positions)) * math.pi
+        angle = (
+            random.uniform(-MAX_ANGLE / 360, MAX_ANGLE / 360)
+            + random.choice(pi_positions)
+        ) * math.pi
 
         n_bounces = 0
         last_touch = 0
@@ -142,26 +163,39 @@ async def display_pong(matrix: RGBMatrix) -> None:
         new_x4_points = _paddle_points(x4, 4) if n_players >= 4 else set()
 
         for point in y1_points - new_y1_points:
-            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
+            draw_point(
+                point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF
+            )
         for point in new_y1_points - y1_points:
             draw_point(point, NaptaColor.BITTERSWEET)
 
         for point in y2_points - new_y2_points:
-            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
+            draw_point(
+                point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF
+            )
         for point in new_y2_points - y2_points:
             draw_point(point, NaptaColor.INDIGO)
 
         for point in x3_points - new_x3_points:
-            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
+            draw_point(
+                point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF
+            )
         for point in new_x3_points - x3_points:
             draw_point(point, NaptaColor.SPRAY)
 
         for point in x4_points - new_x4_points:
-            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
+            draw_point(
+                point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF
+            )
         for point in new_x4_points - x4_points:
             draw_point(point, NaptaColor.GORSE)
 
-        y1_points, y2_points, x3_points, x4_points = new_y1_points, new_y2_points, new_x3_points, new_x4_points
+        y1_points, y2_points, x3_points, x4_points = (
+            new_y1_points,
+            new_y2_points,
+            new_x3_points,
+            new_x4_points,
+        )
 
     def _off_color(point: tuple[int, int]) -> tuple[int, int, int]:
         if point in middle_line:
@@ -194,8 +228,8 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 n_bounces += 1
                 dx, dy = get_post_x_bounce_speed(new_xb, x3, 1, n_bounces)
                 last_touch = 3
-            else: # Point top
-                goal(last_touch)
+            else:  # Point top
+                goal(last_touch, 3)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         elif new_yb > BORDER_BOTTOM:
@@ -207,8 +241,8 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 n_bounces += 1
                 dx, dy = get_post_x_bounce_speed(new_xb, x4, -1, n_bounces)
                 last_touch = 4
-            else: # Point bottom
-                goal(last_touch)
+            else:  # Point bottom
+                goal(last_touch, 4)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         if new_xb < BORDER_LEFT:
@@ -218,7 +252,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 dx, dy = get_post_y_bounce_speed(new_yb, y1, 1, n_bounces)
                 last_touch = 1
             else:  # Point left
-                goal(last_touch)
+                goal(last_touch, 1)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         elif new_xb > BORDER_RIGHT:
@@ -228,7 +262,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 dx, dy = get_post_y_bounce_speed(new_yb, y2, -1, n_bounces)
                 last_touch = 2
             else:  # Point right
-                goal(last_touch)
+                goal(last_touch, 2)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         if new_pt != pt:
@@ -237,35 +271,51 @@ async def display_pong(matrix: RGBMatrix) -> None:
 
         xb, yb, pt = new_xb, new_yb, new_pt
 
-    def goal(player: Literal[0, 1, 2, 3, 4]) -> None:
+    def goal(
+        player: Literal[0, 1, 2, 3, 4], player_looser: Literal[0, 1, 2, 3, 4]
+    ) -> None:
         nonlocal score1, score2, score3, score4, score1_points, score2_points, score3_points, score4_points
 
         if player == 1:
             score1 += 1
+        elif player == 2:
+            score2 += 1
+        elif player == 3:
+            score3 += 1
+        elif player == 4:
+            score4 += 1
+
+        if player_looser == 1:
+            score1 -= 1
+        elif player_looser == 2:
+            score2 -= 1
+        elif player_looser == 3:
+            score3 -= 1
+        elif player_looser == 4:
+            score4 -= 1
+
+        if player == 1 or player_looser == 1:
             new_points = _score_points(score1, 1)
             for point in score1_points - new_points:
                 draw_point(point, NaptaColor.OFF)
             for point in new_points - score1_points:
                 draw_point(point, NaptaColor.BITTERSWEET)
             score1_points = new_points
-        elif player == 2:
-            score2 += 1
+        elif player == 2 or player_looser == 2:
             new_points = _score_points(score2, 2)
             for point in score2_points - new_points:
                 draw_point(point, NaptaColor.OFF)
             for point in new_points - score2_points:
                 draw_point(point, NaptaColor.INDIGO)
             score2_points = new_points
-        elif player == 3:
-            score3 += 1
+        elif player == 3 or player_looser == 3:
             new_points = _score_points(score3, 3)
             for point in score3_points - new_points:
                 draw_point(point, NaptaColor.OFF)
             for point in new_points - score3_points:
                 draw_point(point, NaptaColor.SPRAY)
             score3_points = new_points
-        elif player == 4:
-            score4 += 1
+        elif player == 4 or player_looser == 4:
             new_points = _score_points(score4, 4)
             for point in score4_points - new_points:
                 draw_point(point, NaptaColor.OFF)
@@ -275,11 +325,21 @@ async def display_pong(matrix: RGBMatrix) -> None:
 
     await fullscreen_message(matrix, ["Starting", "Pong game", "server..."])
     on_started = fullscreen_message(
-        matrix, ["Connect to", "play Pong:", "./play.sh", "in the repo", "(Web client", "incoming)"]
+        matrix,
+        [
+            "Connect to",
+            "play Pong:",
+            "./play.sh",
+            "in the repo",
+            "(Web client",
+            "incoming)",
+        ],
     )
 
     client_names = ["P1", "P2", "P3", "P4"]
-    async with control_server(client_names=client_names, min_clients=2, on_started=on_started) as server:
+    async with control_server(
+        client_names=client_names, min_clients=2, on_started=on_started
+    ) as server:
         matrix.Clear()
         draw_middle_line()
         update_paddles()
@@ -291,7 +351,10 @@ async def display_pong(matrix: RGBMatrix) -> None:
         while True:
             t_start = time.time()
             try:
-                tasks = [asyncio.create_task(client.read(32), name=p) for p, client in server.clients.items()]
+                tasks = [
+                    asyncio.create_task(client.read(32), name=p)
+                    for p, client in server.clients.items()
+                ]
                 done, pending = await asyncio.wait(tasks, timeout=timeout)
                 inputs = {task.get_name(): task.result() for task in done}
                 for task in pending:
