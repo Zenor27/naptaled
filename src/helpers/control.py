@@ -2,6 +2,7 @@ import asyncio
 import logging
 from collections.abc import AsyncIterator, Awaitable, Collection
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from src.helpers import ainput
 
@@ -19,8 +20,8 @@ class ControlServer:
 @asynccontextmanager
 async def control_server(
     client_names: Collection[str],
-    min_clients: int | None = None,
-    on_started: Awaitable[None] | None = None,
+    min_clients: Optional[int] = None,
+    on_started: Optional[Awaitable[None]] = None,
 ) -> AsyncIterator[ControlServer]:
     if min_clients is None:
         min_clients = len(client_names)
