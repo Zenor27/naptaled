@@ -16,9 +16,9 @@ PADDLE_SIZE = 10
 MAX_ANGLE = 70
 FPS = 40
 
-BORDER_TOP = 4
+BORDER_TOP = 3
 BORDER_BOTTOM = BOARD_SIZE - 4
-BORDER_LEFT = 4
+BORDER_LEFT = 3
 BORDER_RIGHT = BOARD_SIZE - 4
 
 
@@ -92,6 +92,9 @@ async def display_pong(matrix: RGBMatrix) -> None:
     y1 = y2 = (BOARD_SIZE - PADDLE_SIZE) // 2
     x3 = x4 = (BOARD_SIZE - PADDLE_SIZE) // 2
     y1_points = y2_points = x3_points = x4_points = set[tuple[int, int]]()
+    border_points = {
+        (x, y) for x in range(BORDER_LEFT - 1, BORDER_RIGHT + 2) for y in (BORDER_TOP - 1, BORDER_BOTTOM + 1)
+    } | {(x, y) for y in range(BORDER_TOP - 1, BORDER_BOTTOM + 2) for x in (BORDER_LEFT - 1, BORDER_RIGHT + 1)}
     n_players = 2
     n_bounces = 0
     last_touch: Literal[0, 1, 2, 3, 4] = 0
@@ -105,9 +108,9 @@ async def display_pong(matrix: RGBMatrix) -> None:
         xb = yb = BOARD_SIZE / 2
         pi_positions = [0.0, 1.0]  # Right & left
         if n_players >= 3:
-            pi_positions.append(1.5)  # Bottom
+            pi_positions.append(0.5)  # Top
         if n_players >= 4:
-            pi_positions.append(1.5)  # Top
+            pi_positions.append(1.5)  # Bottom
 
         angle = (random.uniform(-MAX_ANGLE / 360, MAX_ANGLE / 360) + random.choice(pi_positions)) * math.pi
 
@@ -127,6 +130,10 @@ async def display_pong(matrix: RGBMatrix) -> None:
         for dot in middle_line:
             draw_point(dot, NaptaColor.OFF if off else NaptaColor.CORN_FIELD)
 
+    def draw_border() -> None:
+        for dot in border_points:
+            draw_point(dot, NaptaColor.BLUE)
+
     def update_paddles() -> None:
         nonlocal y1, y2, x3, x4, y1_points, y2_points, x3_points, x4_points
 
@@ -135,22 +142,22 @@ async def display_pong(matrix: RGBMatrix) -> None:
         new_x4_points = _paddle_points(x4, 4) if n_players >= 4 else set()
 
         for point in y1_points - new_y1_points:
-            draw_point(point, NaptaColor.OFF)
+            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
         for point in new_y1_points - y1_points:
             draw_point(point, NaptaColor.BITTERSWEET)
 
         for point in y2_points - new_y2_points:
-            draw_point(point, NaptaColor.OFF)
+            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
         for point in new_y2_points - y2_points:
             draw_point(point, NaptaColor.INDIGO)
 
         for point in x3_points - new_x3_points:
-            draw_point(point, NaptaColor.OFF)
+            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
         for point in new_x3_points - x3_points:
             draw_point(point, NaptaColor.SPRAY)
 
         for point in x4_points - new_x4_points:
-            draw_point(point, NaptaColor.OFF)
+            draw_point(point, NaptaColor.BLUE if point in border_points else NaptaColor.OFF)
         for point in new_x4_points - x4_points:
             draw_point(point, NaptaColor.GORSE)
 
@@ -167,6 +174,8 @@ async def display_pong(matrix: RGBMatrix) -> None:
             return NaptaColor.SPRAY
         if point in x4_points or point in score4_points:
             return NaptaColor.GORSE
+        if point in border_points:
+            return NaptaColor.BLUE
         return NaptaColor.OFF
 
     def update_ball() -> None:
@@ -177,27 +186,33 @@ async def display_pong(matrix: RGBMatrix) -> None:
         new_pt = (int(round(new_xb)), int(round(new_yb)))
 
         if new_yb < BORDER_TOP:
-            if n_players < 3 or x3 <= new_xb <= x3 + PADDLE_SIZE:  # Bounce top
+            if n_players < 3:  # Bounce on top wall
+                new_yb = BORDER_TOP - (new_yb - BORDER_TOP)
+                dy = -dy
+            elif x3 - 1 <= new_xb <= x3 + PADDLE_SIZE + 1:  # Bounce on top paddle
                 new_yb = BORDER_TOP - (new_yb - BORDER_TOP)
                 n_bounces += 1
                 dx, dy = get_post_x_bounce_speed(new_xb, x3, 1, n_bounces)
                 last_touch = 3
-            else:
+            else: # Point top
                 goal(last_touch)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         elif new_yb > BORDER_BOTTOM:
-            if n_players < 4 or x4 <= new_xb <= x4 + PADDLE_SIZE:  # Bounce bottom
+            if n_players:  # Bounce on bottom wall
+                new_yb = BORDER_BOTTOM - (new_yb - BORDER_BOTTOM)
+                dy = -dy
+            elif x4 - 1 <= new_xb <= x4 + PADDLE_SIZE + 1:  # Bounce on bottom paddle
                 new_yb = BORDER_BOTTOM - (new_yb - BORDER_BOTTOM)
                 n_bounces += 1
                 dx, dy = get_post_x_bounce_speed(new_xb, x4, -1, n_bounces)
                 last_touch = 4
-            else:
+            else: # Point bottom
                 goal(last_touch)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         if new_xb < BORDER_LEFT:
-            if y1 <= new_yb <= y1 + PADDLE_SIZE:  # Bounce left
+            if y1 - 1 <= new_yb <= y1 + PADDLE_SIZE + 1:  # Bounce on left paddle
                 new_xb = BORDER_LEFT - (new_xb - BORDER_LEFT)
                 n_bounces += 1
                 dx, dy = get_post_y_bounce_speed(new_yb, y1, 1, n_bounces)
@@ -207,7 +222,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
 
         elif new_xb > BORDER_RIGHT:
-            if y2 <= new_yb <= y2 + PADDLE_SIZE:  # Bounce right
+            if y2 - 1 <= new_yb <= y2 + PADDLE_SIZE + 1:  # Bounce on right paddle
                 new_xb = BORDER_RIGHT - (new_xb - BORDER_RIGHT)
                 n_bounces += 1
                 dx, dy = get_post_y_bounce_speed(new_yb, y2, -1, n_bounces)
@@ -287,7 +302,9 @@ async def display_pong(matrix: RGBMatrix) -> None:
                     if n_players < 3:
                         n_players = 3
                         goal(3)
+                        y1_points = y2_points = set()
                         draw_middle_line(off=True)
+                        draw_border()
                         middle_line = set()
                     x3 = get_x_pos(x3, inputs.get("P3"))
                 if "P4" in server.clients:
