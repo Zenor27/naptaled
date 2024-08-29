@@ -173,7 +173,7 @@ async def display_slither(matrix: RGBMatrix) -> None:
             t_start = time.time()
 
             done, pending = await asyncio.wait(
-                (asyncio.create_task(client.read(32), name=name) for name, client in server.clients.items()),
+                [asyncio.create_task(client.read(32), name=name) for name, client in server.clients.items()],
                 timeout=frame_duration,
             )
             for task in done:
