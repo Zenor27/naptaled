@@ -11,7 +11,9 @@ from PIL import Image
 from src.napta_matrix import RGBMatrix, graphics, matrix_script
 
 
-def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
+def image_pixel_by_pixel(
+    image_pixels: list[tuple[int, int, int]]
+) -> Iterable[list[tuple[int, int, int]]]:
     image_pixel_len = len(image_pixels)
     black_mask = [(0, 0, 0)] * image_pixel_len
     new_pixels = []
@@ -34,9 +36,13 @@ def image_pixel_by_pixel(image_pixels: list[tuple[int, int, int]]) -> Iterable[l
     yield image_pixels
 
 
-def image_bottom_to_top(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
+def image_bottom_to_top(
+    image_pixels: list[tuple[int, int, int]]
+) -> Iterable[list[tuple[int, int, int]]]:
     image_pixel_len = len(image_pixels)
-    new_pixels: list[Optional[tuple[int, int, int]]] = [None] * image_pixel_len  # Start with a list of None
+    new_pixels: list[Optional[tuple[int, int, int]]] = [
+        None
+    ] * image_pixel_len  # Start with a list of None
 
     non_white_count = 0
 
@@ -50,14 +56,18 @@ def image_bottom_to_top(image_pixels: list[tuple[int, int, int]]) -> Iterable[li
 
             if non_white_count % 2 == 0:
                 # Add remaining black pixels to complete the image
-                completed_image = [(p if p is not None else (0, 0, 0)) for p in new_pixels]
+                completed_image = [
+                    (p if p is not None else (0, 0, 0)) for p in new_pixels
+                ]
                 yield completed_image
                 non_white_count = 0
 
     yield image_pixels  # Finally, yield the complete image
 
 
-def image_shadow(image_pixels: list[tuple[int, int, int]]) -> Iterable[list[tuple[int, int, int]]]:
+def image_shadow(
+    image_pixels: list[tuple[int, int, int]]
+) -> Iterable[list[tuple[int, int, int]]]:
     image_pixel_len = len(image_pixels)
     new_pixels = []
 
@@ -118,7 +128,9 @@ async def whos_that_pokemon(matrix: RGBMatrix) -> None:
     image.thumbnail((matrix.width, matrix.height), Image.Resampling.LANCZOS)
     converted_image = image.convert("RGB")
     # Get the RGB data from the converted image pixel by pixel.
-    converted_image_pixels: list[tuple[int, int, int]] = list(converted_image.getdata())  # pyright: ignore[reportArgumentType]
+    converted_image_pixels: list[tuple[int, int, int]] = list(
+        converted_image.getdata()
+    )  # pyright: ignore[reportArgumentType]
 
     for image_pixels in random.choice(image_heuristic)(converted_image_pixels):
         dst_image = Image.new("RGB", (matrix.width, matrix.height))
@@ -128,7 +140,9 @@ async def whos_that_pokemon(matrix: RGBMatrix) -> None:
 
     await asyncio.sleep(3)
 
-    pkmn_json = requests.get(f"https://tyradex.vercel.app/api/v1/pokemon/{pkmn_nbr}").json()
+    pkmn_json = requests.get(
+        f"https://tyradex.vercel.app/api/v1/pokemon/{pkmn_nbr}"
+    ).json()
     name = pkmn_json["name"]["fr"]
 
     offscreen_canvas = matrix.CreateFrameCanvas()
