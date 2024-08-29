@@ -7,4 +7,5 @@ if ! git remote | grep -q piku; then
   exit 1
 fi
 
+curl -X POST -H "Content-Type: application/json" -d '{"script":"off"}' http://192.168.128.175:8042/scripts/change
 git push piku --force
