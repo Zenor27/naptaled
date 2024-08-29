@@ -1,8 +1,10 @@
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useCallback } from "react";
 import { getScripts, postChangeScript } from "../api";
+import { Button, Flex, Loader, Title } from "@mantine/core";
 
 const useScripts = () => {
+  const queryClient = useQueryClient();
   const { data: scripts, isLoading } = useQuery({
     queryKey: ["scripts"],
     queryFn: getScripts,
@@ -10,6 +12,9 @@ const useScripts = () => {
 
   const { mutate } = useMutation({
     mutationFn: (script: string) => postChangeScript({ body: { script } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries("scripts");
+    },
   });
 
   const changeScript = useCallback(
@@ -24,31 +29,30 @@ const useScripts = () => {
 
 export const Scripts = () => {
   const { scripts, isLoading, changeScript } = useScripts();
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading || !scripts) return <Loader />;
 
   return (
-    <div>
-      <h1>Scripts</h1>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-          width: "100%",
-          alignItems: "center",
-        }}
+    <>
+      <Title pb="sm">Scripts</Title>
+      <Flex
+        gap="md"
+        justify="flex-start"
+        align="flex-start"
+        direction="row"
+        wrap="wrap"
       >
-        {scripts!.data!.map((script) => (
-          <button
+        {scripts.data?.scripts.map((script) => (
+          <Button
             key={script}
             onClick={() => {
-              changeScript(script);
+              if (script === "display_text") changeScript(script);
             }}
+            disabled={scripts.data?.current_script === script}
           >
             {script.replace(/_/g, " ").replace("display", "").toUpperCase()}
-          </button>
+          </Button>
         ))}
-      </div>
-    </div>
+      </Flex>
+    </>
   );
 };

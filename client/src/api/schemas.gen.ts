@@ -12,6 +12,25 @@ export const $ChangeScriptRequest = {
     title: 'ChangeScriptRequest'
 } as const;
 
+export const $GetScriptsResponse = {
+    properties: {
+        scripts: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Scripts'
+        },
+        current_script: {
+            type: 'string',
+            title: 'Current Script'
+        }
+    },
+    type: 'object',
+    required: ['scripts', 'current_script'],
+    title: 'GetScriptsResponse'
+} as const;
+
 export const $HTTPValidationError = {
     properties: {
         detail: {

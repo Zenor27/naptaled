@@ -29,7 +29,9 @@ _main_program_task: asyncio.Task[None]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _main_program_task
-    _main_program_task = asyncio.create_task(DEFAULT_PROGRAM, name="default_program")
+    _main_program_task = asyncio.create_task(
+        DEFAULT_PROGRAM, name=DEFAULT_PROGRAM.__name__
+    )
     try:
         yield
     finally:
@@ -52,9 +54,21 @@ app.add_middleware(
 )
 
 
+class ScriptResponse(BaseModel):
+    script_name: str
+
+
+class GetScriptsResponse(BaseModel):
+    scripts: list[str]
+    current_script: str
+
+
 @app.get("/scripts", operation_id="get_scripts")
-async def scripts() -> list[str]:
-    return list(MATRIX_SCRIPTS.keys())
+async def scripts() -> GetScriptsResponse:
+    global _main_program_task
+    scripts = list(MATRIX_SCRIPTS.keys())
+    current_script = _main_program_task.get_name()
+    return GetScriptsResponse(scripts=scripts, current_script=current_script)
 
 
 class ChangeScriptRequest(BaseModel):

@@ -4,6 +4,11 @@ export type ChangeScriptRequest = {
     script: string;
 };
 
+export type GetScriptsResponse = {
+    scripts: Array<(string)>;
+    current_script: string;
+};
+
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -14,7 +19,7 @@ export type ValidationError = {
     type: string;
 };
 
-export type GetScriptsResponse = (Array<(string)>);
+export type GetScriptsResponse2 = (GetScriptsResponse);
 
 export type GetScriptsError = unknown;
 
