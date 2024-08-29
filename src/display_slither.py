@@ -3,6 +3,7 @@ import enum
 import random
 import time
 from collections import deque
+from collections.abc import Collection
 from random import choice, randrange
 
 from PIL import Image
@@ -15,8 +16,11 @@ from src.napta_matrix import RGBMatrix, matrix_script
 BOARD_SIZE = 64
 INITIAL_SNAKE_LEN = 4
 SPAWN_SAFE_ZONE = 5
-APPLES_COUNT = 20
-DEAD_TO_APPLE_RATE = 0.3
+APPLES_COUNT = 30
+DEAD_TO_APPLE_RATE = 0.5
+BOOST_TIME = 10
+BOOST_RATIO = 3
+
 FPS = 20
 
 BORDER_TOP = 0
@@ -59,6 +63,7 @@ SNAKES = {
 @matrix_script
 async def display_slither(matrix: RGBMatrix) -> None:
     snakes = dict[str, deque[tuple[int, int]]]()
+    boosts = dict[str, int]()
     apples = set[tuple[int, int]]()
     eating_apples = set[tuple[int, int]]()
 
@@ -100,19 +105,23 @@ async def display_slither(matrix: RGBMatrix) -> None:
 
         apples.difference_update(maybe_new_snake)
 
-    def update_game() -> None:
+    def pop_tails(snake_names: Collection[str]) -> None:
         # Pop tails
-        for snake in snakes.values():
+        for name in snake_names:
+            snake = snakes[name]
             if snake[-1] in eating_apples:
                 eating_apples.remove(snake[-1])
             else:
                 poped = snake.pop()
                 draw_point(poped, NaptaColor.OFF)
 
+
+    def compute_heads(snake_names: Collection[str]) -> None:
         dead_snakes = set[str]()
 
         # Compute new heads
-        for name, snake in snakes.items():
+        for name in snake_names:
+            snake = snakes[name]
             head_x, head_y = snake[0]
             dir = dirs[name]
             if dir == Dir.UP:
@@ -159,7 +168,6 @@ async def display_slither(matrix: RGBMatrix) -> None:
             del snakes[dead_snake]
             del dirs[dead_snake]
 
-
     await fullscreen_message(matrix, ["Starting", "Slither game", "server..."])
     on_started = fullscreen_message(
         matrix, ["Connect to", "play Slither:", "./play.sh", "in the repo", "(Web client", "incoming)"]
@@ -182,10 +190,21 @@ async def display_slither(matrix: RGBMatrix) -> None:
                     if name not in snakes:
                         spawn_snake(name)
                     dirs[name] = get_dir(dirs[name], input)
+                    if b" " in input and name not in boosts and len(snakes[name]) > BOOST_TIME + INITIAL_SNAKE_LEN:
+                        boosts[name] = BOOST_TIME
             for task in pending:
                 task.cancel()
 
-            update_game()
+            pop_tails(snakes.keys())
+            compute_heads(snakes.keys())
+
+            # Boost: pop 1 for tail than heads 1 time on 2
+            if boosts:
+                for _ in range(BOOST_RATIO - 1):
+                    pop_tails(boosts.keys())
+                    compute_heads(boosts.keys())
+                pop_tails([name for name, boost in boosts.items() if boost % 2])
+                boosts = {name: boost - 1 for name, boost in boosts.items() if boost > 1}
 
             for _ in range(APPLES_COUNT - len(apples)):
                 spawn_new_apple()
