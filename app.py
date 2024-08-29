@@ -1,18 +1,26 @@
 import asyncio
 from collections.abc import Coroutine
 from contextlib import asynccontextmanager
+from http import HTTPStatus
+from importlib import import_module
+from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-from src.display_random_restaurant import display_random_restaurant
-from src.display_screensaver import display_screensaver
-from src.display_snake import display_snake
-from src.display_text import display_text
-from src.display_train import display_train
-from src.display_whos_that_pokemon import display_whos_that_pokemon
+from src.napta_matrix import MATRIX_SCRIPTS
 
-DEFAULT_PROGRAM = display_screensaver()
+# Import scripts
+THIS_DIR = Path(__file__).resolve().parent
+for file in sorted(THIS_DIR.glob("src/**/*.py")):
+    if file.stem != "__init__":
+        module_path = ".".join(file.relative_to(THIS_DIR).parts).removesuffix(".py")
+        import_module(module_path)
+
+
+DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_screensaver"]()
 
 
 _main_program_task: asyncio.Task[None]
@@ -21,7 +29,9 @@ _main_program_task: asyncio.Task[None]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _main_program_task
-    _main_program_task = asyncio.create_task(DEFAULT_PROGRAM, name="default_program")
+    _main_program_task = asyncio.create_task(
+        DEFAULT_PROGRAM, name=DEFAULT_PROGRAM.__name__
+    )
     try:
         yield
     finally:
@@ -36,38 +46,40 @@ def switch_program(program: Coroutine[Any, Any, None]) -> None:
 
 app = FastAPI(lifespan=lifespan)
 
-
-@app.get("/screensaver")
-async def run_screensaver():
-    switch_program(display_screensaver())
-    return "OK"
-
-
-@app.get("/train")
-async def run_train():
-    switch_program(display_train())
-    return "OK"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 
-@app.get("/snake")
-async def run_snake():
-    switch_program(display_snake())
-    return "OK"
+class ScriptResponse(BaseModel):
+    script_name: str
 
 
-@app.get("/wtp")
-async def run_wtp():
-    switch_program(display_whos_that_pokemon())
-    return "OK"
+class GetScriptsResponse(BaseModel):
+    scripts: list[str]
+    current_script: str
 
 
-@app.get("/text")
-async def run_text(text: str):
-    switch_program(display_text(text))
-    return "OK"
+@app.get("/scripts", operation_id="get_scripts")
+async def scripts() -> GetScriptsResponse:
+    global _main_program_task
+    scripts = list(MATRIX_SCRIPTS.keys())
+    current_script = _main_program_task.get_name()
+    return GetScriptsResponse(scripts=scripts, current_script=current_script)
 
 
-@app.get("/random_restaurant")
-async def run_random_restaurant():
-    switch_program(display_random_restaurant())
+class ChangeScriptRequest(BaseModel):
+    script: str
+
+
+@app.post("/scripts/change", operation_id="post_change_script")
+async def change_script(change_script_request: ChangeScriptRequest):
+    try:
+        script = MATRIX_SCRIPTS[change_script_request.script]
+    except KeyError:
+        raise HTTPException(HTTPStatus.UNPROCESSABLE_ENTITY, f"Unknown program: {change_script_request.script}")
+    switch_program(script())
     return "OK"

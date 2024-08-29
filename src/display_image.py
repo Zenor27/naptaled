@@ -2,7 +2,7 @@ import asyncio
 
 from PIL import Image, ImageDraw
 
-from napta_matrix import RGBMatrix, matrix_script
+from src.napta_matrix import RGBMatrix, matrix_script
 
 
 @matrix_script

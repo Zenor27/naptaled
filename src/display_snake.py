@@ -1,16 +1,19 @@
 import asyncio
 import enum
-import sys
+import time
 from collections import deque
 from random import randrange
 
 from PIL import Image, ImageDraw
 
+from src.helpers.control import control_server
+from src.helpers.fullscreen_message import fullscreen_message
 from src.helpers.napta_colors import NaptaColor
 from src.napta_matrix import RGBMatrix, matrix_script
 
 BOARD_SIZE = 64
 INITIAL_SNAKE_LEN = 4
+FPS = 20
 
 
 class Dir(enum.Enum):
@@ -20,23 +23,18 @@ class Dir(enum.Enum):
     LEFT = enum.auto()
 
 
-async def ainput() -> bytes:
-    """Cf. https://stackoverflow.com/a/76183977"""
-    return await asyncio.to_thread(sys.stdin.buffer.readline)
+def get_dir(current_dir: Dir, input: bytes) -> Dir:
+    last_press = input[-3:]
+    if last_press == b"\x1b[A" and current_dir in (Dir.LEFT, Dir.RIGHT):
+        return Dir.UP
+    elif last_press == b"\x1b[B" and current_dir in (Dir.LEFT, Dir.RIGHT):
+        return Dir.DOWN
+    elif last_press == b"\x1b[C" and current_dir in (Dir.UP, Dir.DOWN):
+        return Dir.RIGHT
+    elif last_press == b"\x1b[D" and current_dir in (Dir.UP, Dir.DOWN):
+        return Dir.LEFT
 
-
-async def get_dir(current_dir: Dir) -> Dir:
-    while True:
-        inp = await ainput()
-        last_press = inp[-4:-1]
-        if last_press == b"\x1b[A" and current_dir in (Dir.LEFT, Dir.RIGHT):
-            return Dir.UP
-        elif last_press == b"\x1b[B" and current_dir in (Dir.LEFT, Dir.RIGHT):
-            return Dir.DOWN
-        elif last_press == b"\x1b[C" and current_dir in (Dir.UP, Dir.DOWN):
-            return Dir.RIGHT
-        elif last_press == b"\x1b[D" and current_dir in (Dir.UP, Dir.DOWN):
-            return Dir.LEFT
+    return current_dir
 
 
 @matrix_script
@@ -56,7 +54,6 @@ async def display_snake(matrix: RGBMatrix) -> None:
     draw = ImageDraw.Draw(image)
     draw.point(snake, NaptaColor.BITTERSWEET)
     draw.point(apple, NaptaColor.GREEN)
-    matrix.SetImage(image, 0, 0)
 
     def draw_point(pix: tuple[int, int], color: tuple[int, int, int]) -> None:
         matrix.SetPixel(*pix, *color)
@@ -68,7 +65,7 @@ async def display_snake(matrix: RGBMatrix) -> None:
             eating_apples.remove(snake[-1])
         else:
             poped = snake.pop()
-            draw_point(poped, (0, 0, 0))
+            draw_point(poped, NaptaColor.OFF)
 
         head_x, head_y = snake[0]
         if dir == Dir.UP:
@@ -89,24 +86,30 @@ async def display_snake(matrix: RGBMatrix) -> None:
             draw_point(eating_apple, NaptaColor.GORSE)
 
         if new_head in snake:
-            raise RuntimeError("U NOOB")
+            raise ValueError("U NOOB")
 
         draw_point(new_head, NaptaColor.BITTERSWEET)
         snake.appendleft(new_head)
 
-    print("=========================================================================")
-    print("Prepare your next direction with arrow keys, then press Enter to apply it")
-    print("=========================================================================")
+    await fullscreen_message(matrix, ["Starting", "Snake game", "server..."])
+    on_started = fullscreen_message(
+        matrix, ["Connect to", "play Snake:", "./play.sh", "in the repo", "(Web client", "incoming)"]
+    )
 
-    get_dir_task = asyncio.create_task(get_dir(dir))
+    async with control_server(client_names=["P"], on_started=on_started) as server:
+        matrix.SetImage(image, 0, 0)
+        timeout = 1 / FPS
 
-    while True:
-        await asyncio.wait([get_dir_task], timeout=0.05)
-        if get_dir_task.done():
-            dir = get_dir_task.result()
-            get_dir_task = asyncio.create_task(get_dir(dir))
+        while True:
+            t_start = time.time()
+            try:
+                input = await asyncio.wait_for(server.clients["P"].read(32), timeout=timeout)
+                dir = get_dir(dir, input)
+            except asyncio.TimeoutError:
+                pass
 
-        update_game()
+            update_game()
+            await asyncio.sleep(1 / FPS - (time.time() - t_start))
 
 
 if __name__ == "__main__":
