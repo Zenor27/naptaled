@@ -45,7 +45,7 @@ export const Scripts = () => {
           <Button
             key={script}
             onClick={() => {
-              if (script === "display_text") changeScript(script);
+              changeScript(script);
             }}
             disabled={scripts.data?.current_script === script}
           >
