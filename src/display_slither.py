@@ -108,20 +108,25 @@ async def display_slither(matrix: RGBMatrix) -> None:
     def pop_tails(snake_names: Collection[str]) -> None:
         # Pop tails
         for name in snake_names:
-            snake = snakes[name]
+            snake = snakes.get(name)
+            if not snake:
+                continue
+
             if snake[-1] in eating_apples:
                 eating_apples.remove(snake[-1])
             else:
                 poped = snake.pop()
                 draw_point(poped, NaptaColor.OFF)
 
-
     def compute_heads(snake_names: Collection[str]) -> None:
         dead_snakes = set[str]()
 
         # Compute new heads
         for name in snake_names:
-            snake = snakes[name]
+            snake = snakes.get(name)
+            if not snake:
+                continue
+
             head_x, head_y = snake[0]
             dir = dirs[name]
             if dir == Dir.UP:
