@@ -7,4 +7,4 @@ if ! git remote | grep -q piku; then
   exit 1
 fi
 
-git push piku --force-with-lease
+git push piku --force

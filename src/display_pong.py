@@ -13,7 +13,7 @@ from src.napta_matrix import RGBMatrix, matrix_script
 
 BOARD_SIZE = 64
 PADDLE_SIZE = 10
-BALL_SPEED = 1
+BALL_SPEED = 0.5
 MAX_ANGLE = 70
 FPS = 40
 
@@ -32,11 +32,11 @@ def get_pos(y: int, input: Optional[bytes]) -> int:
     return y
 
 
-def get_post_bounce_speed(yb: float, y_paddle: int, dx_sign: Literal[1, -1]) -> tuple[float, float]:
+def get_post_bounce_speed(yb: float, y_paddle: int, dx_sign: Literal[1, -1], speed: float) -> tuple[float, float]:
     dist_from_paddle_mid = yb - (y_paddle + PADDLE_SIZE / 2)
     new_angle = (dist_from_paddle_mid / PADDLE_SIZE) * MAX_ANGLE / 180 * math.pi
-    dx = math.cos(new_angle) * BALL_SPEED * dx_sign
-    dy = math.sin(new_angle) * BALL_SPEED
+    dx = math.cos(new_angle) * speed * dx_sign
+    dy = math.sin(new_angle) * speed
     return dx, dy
 
 
@@ -61,17 +61,19 @@ async def display_pong(matrix: RGBMatrix) -> None:
 
     y1 = y2 = (BOARD_SIZE - PADDLE_SIZE) // 2
     y1_points = y2_points = set[tuple[int, int]]()
+    speed = BALL_SPEED
 
     score1 = score2 = -1
     score1_points = score2_points = set[tuple[int, int]]()
 
     def place_ball() -> tuple[float, float, float, float, tuple[int, int]]:
-        nonlocal y1, y2, y1_points, y2_points, xb, yb, dx, dy
+        nonlocal y1, y2, y1_points, y2_points, xb, yb, dx, dy, speed
 
         xb = yb = BOARD_SIZE / 2
         angle = (random.uniform(-MAX_ANGLE / 360, MAX_ANGLE / 360) + random.randrange(2)) * math.pi
-        dx = math.cos(angle) * BALL_SPEED
-        dy = math.sin(angle) * BALL_SPEED
+        speed = BALL_SPEED
+        dx = math.cos(angle) * speed
+        dy = math.sin(angle) * speed
         pt = (int(round(xb)), int(round(yb)))
         return xb, yb, dx, dy, pt
 
@@ -110,7 +112,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
         return NaptaColor.OFF
 
     def update_ball() -> None:
-        nonlocal y1, y2, y1_points, y2_points, xb, yb, dx, dy, pt
+        nonlocal y1, y2, y1_points, y2_points, xb, yb, dx, dy, pt, speed
 
         new_xb = xb + dx
         new_yb = yb + dy
@@ -126,14 +128,16 @@ async def display_pong(matrix: RGBMatrix) -> None:
         if new_xb < BORDER_LEFT:
             if y1 <= new_yb <= y1 + PADDLE_SIZE:  # Bounce left
                 new_xb = BORDER_LEFT - (new_xb - BORDER_LEFT)
-                dx, dy = get_post_bounce_speed(new_yb, y1, 1)
+                speed += 0.25
+                dx, dy = get_post_bounce_speed(new_yb, y1, 1, speed)
             else:  # Point left
                 goal(2)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
         elif new_xb > BORDER_RIGHT:
             if y2 <= new_yb <= y2 + PADDLE_SIZE:  # Bounce right
                 new_xb = BORDER_RIGHT - (new_xb - BORDER_RIGHT)
-                dx, dy = get_post_bounce_speed(new_yb, y2, -1)
+                speed += 0.25
+                dx, dy = get_post_bounce_speed(new_yb, y2, -1, speed)
             else:  # Point right
                 goal(1)
                 new_xb, new_yb, dx, dy, new_pt = place_ball()
