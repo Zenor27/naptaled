@@ -344,8 +344,8 @@ async def display_pong(matrix: RGBMatrix) -> None:
         draw_middle_line()
         update_paddles()
         update_ball()
-        goal(1)
-        goal(2)
+        goal(1, 0)
+        goal(2, 0)
         timeout = 1 / FPS
 
         while True:
@@ -364,7 +364,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 if "P3" in server.clients:
                     if n_players < 3:
                         n_players = 3
-                        goal(3)
+                        goal(3, 0)
                         y1_points = y2_points = set()
                         draw_middle_line(off=True)
                         draw_border()
@@ -373,7 +373,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
                 if "P4" in server.clients:
                     if n_players < 4:
                         n_players = 4
-                        goal(4)
+                        goal(4, 0)
                     x4 = get_x_pos(x4, inputs.get("P4"))
             except asyncio.TimeoutError:
                 pass
