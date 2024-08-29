@@ -19,4 +19,4 @@ async def off(matrix: RGBMatrix) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(display_image())
+    asyncio.run(off())
