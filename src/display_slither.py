@@ -177,10 +177,11 @@ async def display_slither(matrix: RGBMatrix) -> None:
                 timeout=frame_duration,
             )
             for task in done:
-                name = task.get_name()
-                if name not in snakes:
-                    spawn_snake(name)
-                dirs[name] = get_dir(dirs[name], task.result())
+                if input := task.result():
+                    name = task.get_name()
+                    if name not in snakes:
+                        spawn_snake(name)
+                    dirs[name] = get_dir(dirs[name], input)
             for task in pending:
                 task.cancel()
 
