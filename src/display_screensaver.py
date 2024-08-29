@@ -45,9 +45,12 @@ async def display_screensaver(matrix: RGBMatrix) -> None:
     dx = choice([-1, 1])
     dy = choice([-1, 1])
 
+    double_buffer = matrix.CreateFrameCanvas()
+
     while True:
-        matrix.Clear()
-        matrix.SetImage(image, x, y)
+        double_buffer.Clear()
+        double_buffer.SetImage(image, x, y)
+        double_buffer = matrix.SwapOnVSync(double_buffer)
         await asyncio.sleep(0.05)
         x += dx
         y += dy
