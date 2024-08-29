@@ -8,7 +8,7 @@ from src.napta_matrix import RGBMatrix, matrix_script
 
 @matrix_script
 async def off(matrix: RGBMatrix) -> None:
-    fullscreen_message(
+    await fullscreen_message(
         matrix,
         [
             "Deployment",
