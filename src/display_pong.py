@@ -87,7 +87,7 @@ def _score_points(score: int, player: Literal[1, 2, 3, 4]) -> set[tuple[int, int
     origin_y = 6 if player <= 2 else 50
     return {
         point
-        for i, digit in enumerate(int(x) for x in str(score))
+        for i, digit in enumerate(x for x in str(score))
         for point in pattern_to_points(
             DIGIT_PATTERNS[digit], origin_x=origin_x + (6 * i), origin_y=origin_y
         )
@@ -277,13 +277,13 @@ async def display_pong(matrix: RGBMatrix) -> None:
         nonlocal score1, score2, score3, score4, score1_points, score2_points, score3_points, score4_points
 
         if player == 1:
-            score1 += 1
+            score1 += 2
         elif player == 2:
-            score2 += 1
+            score2 += 2
         elif player == 3:
-            score3 += 1
+            score3 += 2
         elif player == 4:
-            score4 += 1
+            score4 += 2
 
         if player_looser == 1:
             score1 -= 1
@@ -301,21 +301,21 @@ async def display_pong(matrix: RGBMatrix) -> None:
             for point in new_points - score1_points:
                 draw_point(point, NaptaColor.BITTERSWEET)
             score1_points = new_points
-        elif player == 2 or player_looser == 2:
+        if player == 2 or player_looser == 2:
             new_points = _score_points(score2, 2)
             for point in score2_points - new_points:
                 draw_point(point, NaptaColor.OFF)
             for point in new_points - score2_points:
                 draw_point(point, NaptaColor.INDIGO)
             score2_points = new_points
-        elif player == 3 or player_looser == 3:
+        if player == 3 or player_looser == 3:
             new_points = _score_points(score3, 3)
             for point in score3_points - new_points:
                 draw_point(point, NaptaColor.OFF)
             for point in new_points - score3_points:
                 draw_point(point, NaptaColor.SPRAY)
             score3_points = new_points
-        elif player == 4 or player_looser == 4:
+        if player == 4 or player_looser == 4:
             new_points = _score_points(score4, 4)
             for point in score4_points - new_points:
                 draw_point(point, NaptaColor.OFF)
