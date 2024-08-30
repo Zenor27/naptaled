@@ -5,12 +5,12 @@ from PIL import Image
 
 from src.napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
 
-TRAIN_PATH = Path(__file__).parent.resolve() / "../assets/naptaled64.gif"
+LOGO_PATH = Path(__file__).parent.resolve() / "../assets/naptaled64_black.gif"
 
 
 @matrix_script
 async def display_logo(matrix: RGBMatrix) -> None:
-    image = Image.open(TRAIN_PATH.resolve())
+    image = Image.open(LOGO_PATH.resolve())
 
     double_buffer = matrix.CreateFrameCanvas()
     while True:
