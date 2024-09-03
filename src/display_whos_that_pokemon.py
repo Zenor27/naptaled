@@ -27,7 +27,7 @@ def image_pixel_by_pixel(
         if pixel != (255, 255, 255):  # Check if the pixel is not white
             non_white_count += 1
 
-            if non_white_count % 2 == 0:
+            if non_white_count % 5 == 0:
                 # Add remaining black pixels to complete the image
                 completed_image = new_pixels + black_mask[len(new_pixels) :]
                 yield completed_image
@@ -54,7 +54,7 @@ def image_bottom_to_top(
         if pixel != (255, 255, 255):  # Check if the pixel is not white
             non_white_count += 1
 
-            if non_white_count % 2 == 0:
+            if non_white_count % 5 == 0:
                 # Add remaining black pixels to complete the image
                 completed_image = [
                     (p if p is not None else (0, 0, 0)) for p in new_pixels
