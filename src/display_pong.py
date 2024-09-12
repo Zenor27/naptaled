@@ -9,7 +9,7 @@ from src.helpers.digits import DIGIT_PATTERNS
 from src.helpers.draw import pattern_to_points
 from src.helpers.fullscreen_message import fullscreen_message
 from src.helpers.napta_colors import NaptaColor
-from src.napta_matrix import RGBMatrix, matrix_script
+from src.napta_matrix import KeyboardKeys, RGBMatrix, playable_matrix_script
 
 BOARD_SIZE = 64
 PADDLE_SIZE = 10
@@ -106,7 +106,11 @@ def _score_points(score: int, player: Literal[1, 2, 3, 4]) -> set[tuple[int, int
     }
 
 
-@matrix_script
+@playable_matrix_script(
+    min_player_number=2,
+    max_player_number=4,
+    keys=[KeyboardKeys.UP, KeyboardKeys.DOWN, KeyboardKeys.LEFT, KeyboardKeys.RIGHT],
+)
 async def display_pong(matrix: RGBMatrix) -> None:
     def draw_point(pix: tuple[int, int], color: tuple[int, int, int]) -> None:
         matrix.SetPixel(*pix, *color)
@@ -321,14 +325,7 @@ async def display_pong(matrix: RGBMatrix) -> None:
     await fullscreen_message(matrix, ["Starting", "Pong game", "server..."])
     on_started = fullscreen_message(
         matrix,
-        [
-            "Connect to",
-            "play Pong:",
-            "./play.sh",
-            "in the repo",
-            "(Web client",
-            "incoming)",
-        ],
+        ["Waiting for", "players..."],
     )
 
     client_names = ["P1", "P2", "P3", "P4"]

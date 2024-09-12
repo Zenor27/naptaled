@@ -2,13 +2,13 @@
 
 export const $ChangeScriptRequest = {
     properties: {
-        script: {
+        script_id: {
             type: 'string',
-            title: 'Script'
+            title: 'Script Id'
         }
     },
     type: 'object',
-    required: ['script'],
+    required: ['script_id'],
     title: 'ChangeScriptRequest'
 } as const;
 
@@ -16,14 +16,13 @@ export const $GetScriptsResponse = {
     properties: {
         scripts: {
             items: {
-                type: 'string'
+                '$ref': '#/components/schemas/ScriptResponse'
             },
             type: 'array',
             title: 'Scripts'
         },
         current_script: {
-            type: 'string',
-            title: 'Current Script'
+            '$ref': '#/components/schemas/ScriptResponse'
         }
     },
     type: 'object',
@@ -43,6 +42,57 @@ export const $HTTPValidationError = {
     },
     type: 'object',
     title: 'HTTPValidationError'
+} as const;
+
+export const $PlayableScriptResponse = {
+    properties: {
+        script_id: {
+            type: 'string',
+            title: 'Script Id'
+        },
+        script_name: {
+            type: 'string',
+            title: 'Script Name'
+        },
+        min_player_number: {
+            type: 'integer',
+            title: 'Min Player Number'
+        },
+        max_player_number: {
+            type: 'integer',
+            title: 'Max Player Number'
+        },
+        keys: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Keys'
+        }
+    },
+    type: 'object',
+    required: ['script_id', 'script_name', 'min_player_number', 'max_player_number', 'keys'],
+    title: 'PlayableScriptResponse'
+} as const;
+
+export const $ScriptResponse = {
+    properties: {
+        script_id: {
+            type: 'string',
+            title: 'Script Id'
+        },
+        script_name: {
+            type: 'string',
+            title: 'Script Name'
+        },
+        is_playable: {
+            type: 'boolean',
+            title: 'Is Playable'
+        }
+    },
+    type: 'object',
+    required: ['script_id', 'script_name', 'is_playable'],
+    title: 'ScriptResponse'
 } as const;
 
 export const $ValidationError = {

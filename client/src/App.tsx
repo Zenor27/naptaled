@@ -6,9 +6,10 @@ import { MantineProvider } from "@mantine/core";
 
 import { client } from "./api";
 import { Layout } from "./components/layout";
+import { getBaseURL } from "./api/get-base-url";
 
 client.setConfig({
-  baseUrl: `http://${window.location.hostname}:8042`,
+  baseUrl: getBaseURL(),
 });
 const queryClient = new QueryClient();
 
