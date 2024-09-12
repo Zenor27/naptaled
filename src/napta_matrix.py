@@ -1,9 +1,10 @@
 import asyncio
+import enum
 import logging
 import os
 from collections.abc import Callable, Coroutine
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 from typing_extensions import Concatenate, ParamSpec
 
@@ -42,7 +43,50 @@ def _get_matrix() -> RGBMatrix:
     return RGBMatrix(options=options)
 
 
-MATRIX_SCRIPTS = dict[str, Callable[..., Coroutine[Any, Any, None]]]()
+class MatrixScript(NamedTuple):
+    function: Callable[..., Coroutine[Any, Any, None]]
+    script_name: str
+
+
+class KeyboardKeys(enum.Enum):
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+
+
+class PlayableMatrixScript(NamedTuple):
+    function: Callable[..., Coroutine[Any, Any, None]]
+    script_name: str
+    min_player_number: int
+    max_player_number: int
+    keys: list[KeyboardKeys]
+
+
+MATRIX_SCRIPTS = dict[str, MatrixScript | PlayableMatrixScript]()
+
+
+async def _handle_matrix_script_exception(matrix: RGBMatrix, function_name: str) -> None:
+    from src.display_screensaver import display_screensaver
+    from src.helpers.fullscreen_message import fullscreen_message
+
+    logging.exception(f"Fatal error in program {function_name!r}: ", exc_info=True)
+    program_name = function_name.removeprefix("display_")
+    await fullscreen_message(
+        matrix,
+        [
+            "Fatal error",
+            "in program",
+            program_name,
+            "",
+            "Restarting",
+            "in a few",
+            "seconds...",
+        ],
+        color=cast(tuple[int, int, int], NaptaColor.BITTERSWEET),
+    )
+    await asyncio.sleep(5)
+    await asyncio.create_task(display_screensaver())
 
 
 def matrix_script(
@@ -55,31 +99,47 @@ def matrix_script(
         try:
             await function(matrix, *args, **kwargs)
         except Exception:
-            from src.display_screensaver import display_screensaver
-            from src.helpers.fullscreen_message import fullscreen_message
-
-            logging.exception(f"Fatal error in program {function.__name__!r}: ", exc_info=True)
-            program_name = function.__name__.removeprefix("display_")
-            await fullscreen_message(
-                matrix,
-                [
-                    "Fatal error",
-                    "in program",
-                    program_name,
-                    "",
-                    "Restarting",
-                    "in a few",
-                    "seconds...",
-                ],
-                color=NaptaColor.BITTERSWEET,
-            )
-            await asyncio.sleep(5)
-            await asyncio.create_task(display_screensaver())
+            await _handle_matrix_script_exception(matrix, function.__name__)
             raise
 
-    MATRIX_SCRIPTS[function.__name__] = wrapper
+    MATRIX_SCRIPTS[function.__name__] = MatrixScript(
+        function=wrapper, script_name=function.__name__.replace("display_", "")
+    )
 
     return wrapper
 
 
-__all__ = ["RGBMatrix", "RGBMatrixOptions", "graphics", "matrix_script"]
+def playable_matrix_script(*, min_player_number: int, max_player_number: int, keys: list[KeyboardKeys]):
+    def matrix_script(
+        function: Callable[Concatenate[RGBMatrix, _P], Coroutine[Any, Any, None]],
+    ) -> Callable[_P, Coroutine[Any, Any, None]]:
+        @wraps(function)
+        async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
+            matrix = _get_matrix()
+            matrix.Clear()
+            try:
+                await function(matrix, *args, **kwargs)
+            except Exception:
+                await _handle_matrix_script_exception(matrix, function.__name__)
+                raise
+
+        MATRIX_SCRIPTS[function.__name__] = PlayableMatrixScript(
+            function=wrapper,
+            script_name=function.__name__.replace("display_", ""),
+            min_player_number=min_player_number,
+            max_player_number=max_player_number,
+            keys=keys,
+        )
+
+        return wrapper
+
+    return matrix_script
+
+
+__all__ = [
+    "RGBMatrix",
+    "RGBMatrixOptions",
+    "graphics",
+    "matrix_script",
+    "playable_matrix_script",
+]

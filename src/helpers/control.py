@@ -4,17 +4,24 @@ from collections.abc import AsyncIterator, Awaitable, Collection
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from src.helpers import ainput
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 SERVER_PORT = 4422
 
-INP = b"INP\n"
 RDY = b"RDY\n"
+WAIT = b"WAIT\n"
+WRONG = b"WRG\n"
 
 
 class ControlServer:
-    def __init__(self) -> None:
+    def __init__(self, *, min_clients: int) -> None:
         self.clients = dict[str, asyncio.StreamReader]()
+        self.min_clients = min_clients
+
+    def can_start(self) -> bool:
+        return len(self.clients) >= self.min_clients
 
 
 @asynccontextmanager
@@ -25,59 +32,34 @@ async def control_server(
 ) -> AsyncIterator[ControlServer]:
     if min_clients is None:
         min_clients = len(client_names)
-    _client_names = [name.encode() for name in client_names]
-    server = ControlServer()
 
-    async def client_connected(
-        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
-    ):
+    _client_names = [name.encode() for name in client_names]
+    server = ControlServer(min_clients=min_clients)
+
+    async def client_connected(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         if len(client_names) == 1:
             [client_name] = client_names
         else:
             while True:
-                writer.write(b"Who are you? (choices: %s)\n" % b", ".join(_client_names))
-                writer.write(INP)
-                await writer.drain()
                 proposal = (await reader.readuntil(b"\n")).strip()
                 if proposal in _client_names:
                     client_name = proposal.decode()
                     break
-                writer.write(b"Wrong answer...\n\n")
+                writer.write(WRONG)
 
-        writer.write(RDY)
-        await writer.drain()
         server.clients[client_name] = reader
 
-    logging.info(f"Creating TCP server on port {SERVER_PORT}...")
+        if server.can_start():
+            writer.write(RDY)
+        else:
+            writer.write(WAIT)
+        await writer.drain()
+
+    logger.info(f"Creating TCP server on port {SERVER_PORT}...")
     async with await asyncio.start_server(client_connected, host="0.0.0.0", port=SERVER_PORT):
-        logging.info("Server ready!")
         if on_started:
             await on_started
-        while len(server.clients) < min_clients:
+        while not server.can_start():
             await asyncio.sleep(1)
 
         yield server
-
-
-async def connect_to_server(host: str) -> None:
-    print("Connecting...")
-    reader, writer = await asyncio.open_connection(host=host, port=SERVER_PORT)
-    print("Connected!")
-    while True:
-        message = await reader.readuntil(b"\n")
-        if message == RDY:
-            break
-        elif message == INP:
-            inp = input(">>> ")
-            writer.write(inp.encode() + b"\n")
-            await writer.drain()
-        else:
-            print(message.decode(), end="")
-
-    print("Ready!")
-
-    with ainput.capture_terminal() as get_input:
-        while True:
-            if input_ := get_input():
-                writer.write(input_)
-            await asyncio.sleep(0.01)

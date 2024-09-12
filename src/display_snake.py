@@ -39,7 +39,9 @@ def get_dir(current_dir: Dir, input: bytes) -> Dir:
 
 @matrix_script
 async def display_snake(matrix: RGBMatrix) -> None:
-    snake = deque(((20 + i) % BOARD_SIZE, 40) for i in range(INITIAL_SNAKE_LEN, 0, -1))  # Head to queue
+    snake = deque(
+        ((20 + i) % BOARD_SIZE, 40) for i in range(INITIAL_SNAKE_LEN, 0, -1)
+    )  # Head to queue
 
     def get_next_apple() -> tuple[int, int]:
         while (maybe_apple := (randrange(BOARD_SIZE), randrange(BOARD_SIZE))) in snake:
@@ -93,7 +95,15 @@ async def display_snake(matrix: RGBMatrix) -> None:
 
     await fullscreen_message(matrix, ["Starting", "Snake game", "server..."])
     on_started = fullscreen_message(
-        matrix, ["Connect to", "play Snake:", "./play.sh", "in the repo", "(Web client", "incoming)"]
+        matrix,
+        [
+            "Connect to",
+            "play Snake:",
+            "./play.sh",
+            "in the repo",
+            "(Web client",
+            "incoming)",
+        ],
     )
 
     async with control_server(client_names=["P"], on_started=on_started) as server:
@@ -103,7 +113,9 @@ async def display_snake(matrix: RGBMatrix) -> None:
         while True:
             t_start = time.time()
             try:
-                input = await asyncio.wait_for(server.clients["P"].read(32), timeout=timeout)
+                input = await asyncio.wait_for(
+                    server.clients["P"].read(32), timeout=timeout
+                )
                 dir = get_dir(dir, input)
             except asyncio.TimeoutError:
                 pass
