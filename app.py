@@ -81,7 +81,7 @@ async def scripts() -> GetScriptsResponse:
 @app.post("/scripts/change", operation_id="post_change_script")
 async def change_script(
     script: str = Form(...),  # Keep this as required
-    image: UploadFile | None = File(None),
+    image: Union[UploadFile, None] = File(None),
 ):
     try:
         script_func = MATRIX_SCRIPTS[script]
