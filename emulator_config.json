@@ -1,6 +1,6 @@
 {
     "pixel_outline": 0,
-    "pixel_size": 8,
+    "pixel_size": 4,
     "pixel_style": "square",
     "display_adapter": "pygame",
     "suppress_font_warnings": false,

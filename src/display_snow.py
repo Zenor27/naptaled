@@ -1,13 +1,12 @@
 import asyncio
-from pathlib import Path
 from io import BytesIO
+from pathlib import Path
 
 from PIL import Image
 
 from src.napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
 
 SNOW_PATH = Path(__file__).parent.resolve() / "../assets/snow02.gif"
-
 
 @matrix_script
 async def display_snow(matrix: RGBMatrix, image: bytes | None = None) -> None:
@@ -18,33 +17,35 @@ async def display_snow(matrix: RGBMatrix, image: bytes | None = None) -> None:
         image_obj = Image.open(SNOW_PATH.resolve())
 
     double_buffer = matrix.CreateFrameCanvas()
-    while True:
-        try:
-            # Check if image is animated (like a GIF)
-            is_animated = hasattr(image_obj, "n_frames") and image_obj.n_frames > 1
+    try:
+        # Check if image is animated (like a GIF)
+        is_animated = hasattr(image_obj, "n_frames") and image_obj.n_frames > 1  # type: ignore[attr-defined]
 
-            if is_animated:
+        if is_animated:
+            frames = [
+                image_obj.seek(keyframe) or image_obj.copy().convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE))
+                for keyframe in range(image_obj.n_frames) # type: ignore[attr-defined]
+            ]
+
+            double_buffer = matrix.CreateFrameCanvas()
+
+            while True:
                 image_obj.seek(0)
-                for keyframe in range(image_obj.n_frames):
-                    image_obj.seek(keyframe)
-                    img_cpy = image_obj.copy()
-                    double_buffer.SetImage(
-                        img_cpy.convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE))
-                    )
+                for frame in frames:
+                    double_buffer.SetImage(frame)
                     double_buffer = matrix.SwapOnVSync(double_buffer)
                     await asyncio.sleep(0.01)
-                await asyncio.sleep(5)
-            else:
-                # For static images, just display them continuously
-                double_buffer.SetImage(
-                    image_obj.convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE))
-                )
-                double_buffer = matrix.SwapOnVSync(double_buffer)
-                await asyncio.sleep(5)  # Wait 5 seconds before refreshing
 
-        except Exception as e:
-            print(f"Error displaying image: {e}")
-            await asyncio.sleep(1)  # Wait before retrying
+        else:
+            # For static images, just display them
+            double_buffer.SetImage(
+                image_obj.convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE))
+            )
+            double_buffer = matrix.SwapOnVSync(double_buffer)
+
+    except Exception as e:
+        print(f"Error displaying image: {e}")
+        await asyncio.sleep(1)  # Wait before retrying
 
 
 if __name__ == "__main__":

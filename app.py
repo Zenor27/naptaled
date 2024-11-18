@@ -20,7 +20,7 @@ for file in sorted(THIS_DIR.glob("src/**/*.py")):
         import_module(module_path)
 
 
-DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_screensaver"]()
+DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_snow"]()
 
 
 _main_program_task: asyncio.Task[None]
