@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { useCallback } from "react";
-import { getScripts, postChangeScript } from "../api";
-import { Button, Flex, Loader, Title, FileInput } from "@mantine/core";
+import { useCallback, useState } from "react";
+import { getScripts } from "../api";
+import { Button, Flex, Loader, Title, FileInput, Stack } from "@mantine/core";
 
 const useScripts = () => {
   const queryClient = useQueryClient();
@@ -12,18 +12,23 @@ const useScripts = () => {
 
   const { mutate } = useMutation({
     mutationFn: async ({ script, image }: { script: string; image?: File }) => {
-      // If there's an image, use FormData
+      const formData = new FormData();
+      formData.append('script', script);
       if (image) {
-        const formData = new FormData();
-        formData.append('script', script);
         formData.append('image', image);
-        return postChangeScript({ 
-          body: formData
-        });
       }
       
-      // If no image, use the original JSON format
-      return postChangeScript({ body: { script } });
+      const response = await fetch(`http://${window.location.hostname}:8042/scripts/change`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to change script');
+      }
+      
+      return await response.text();
     },
     onSuccess: () => {
       queryClient.invalidateQueries("scripts");
@@ -32,6 +37,7 @@ const useScripts = () => {
 
   const changeScript = useCallback(
     (script: string, image?: File) => {
+      console.log('Changing script to:', script, image ? 'with image' : 'without image');
       mutate({ script, image });
     },
     [mutate]
@@ -42,7 +48,14 @@ const useScripts = () => {
 
 export const Scripts = () => {
   const { scripts, isLoading, changeScript } = useScripts();
+  const [lastImageUpload, setLastImageUpload] = useState<number>(0);
+  
   if (isLoading || !scripts) return <Loader />;
+
+  // Find currently running script info
+  const currentScript = scripts.data?.scripts.find(
+    script => script.name === scripts.data?.current_script
+  );
 
   return (
     <>
@@ -54,29 +67,37 @@ export const Scripts = () => {
         direction="column"
         wrap="wrap"
       >
-        <FileInput
-          label="Upload Image"
-          placeholder="Select image"
-          accept="image/*"
-          onChange={(file) => {
-            if (file) {
-              changeScript('display_image', file);
-            }
-          }}
-        />
-        
-        {scripts.data?.scripts.map((script) => (
-          <Button
-            key={script}
-            onClick={() => {
-              // Regular scripts don't need an image
-              changeScript(script);
+        {currentScript?.requires_image && (
+          <FileInput
+            label="Upload Image"
+            placeholder="Select image"
+            accept="image/*"
+            onChange={(file) => {
+              if (file) {
+                changeScript(currentScript.name, file);
+                setLastImageUpload(Date.now());
+              }
             }}
-            disabled={scripts.data?.current_script === script}
-          >
-            {script.replace(/_/g, " ").replace("display", "").toUpperCase()}
-          </Button>
-        ))}
+          />
+        )}
+        
+        <Stack>
+          {scripts.data?.scripts.map((script) => (
+            <Button
+              key={script.name}
+              onClick={() => {
+                console.log('Button clicked for script:', script.name);
+                changeScript(script.name);
+              }}
+              disabled={
+                scripts.data?.current_script === script.name && 
+                (!script.requires_image || lastImageUpload === 0)
+              }
+            >
+              {script.name.replace(/_/g, " ").replace("display", "").toUpperCase()}
+            </Button>
+          ))}
+        </Stack>
       </Flex>
     </>
   );

@@ -4,8 +4,13 @@ export type ChangeScriptRequest = {
     script: string;
 } | FormData;
 
+export type Script = {
+    name: string;
+    requires_image: boolean;
+};
+
 export type GetScriptsResponse = {
-    scripts: Array<(string)>;
+    scripts: Array<Script>;
     current_script: string;
 };
 

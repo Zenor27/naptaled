@@ -11,7 +11,9 @@ SNOW_PATH = Path(__file__).parent.resolve() / "../assets/snow02.gif"
 
 
 @matrix_script
-async def display_snow(matrix: RGBMatrix, image: Union[bytes, None] = None) -> None:
+async def display_choose_image(
+    matrix: RGBMatrix, image: Union[bytes, None] = None
+) -> None:
     # Use provided image if available, otherwise fallback to default snow gif
     if image:
         image_obj = Image.open(BytesIO(image))
