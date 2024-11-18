@@ -1,6 +1,7 @@
 import asyncio
 from io import BytesIO
 from pathlib import Path
+from typing import Union
 
 from PIL import Image
 
@@ -8,8 +9,9 @@ from src.napta_matrix import MATRIX_SIZE, RGBMatrix, matrix_script
 
 SNOW_PATH = Path(__file__).parent.resolve() / "../assets/snow02.gif"
 
+
 @matrix_script
-async def display_snow(matrix: RGBMatrix, image: bytes | None = None) -> None:
+async def display_snow(matrix: RGBMatrix, image: Union[bytes, None] = None) -> None:
     # Use provided image if available, otherwise fallback to default snow gif
     if image:
         image_obj = Image.open(BytesIO(image))
@@ -23,8 +25,9 @@ async def display_snow(matrix: RGBMatrix, image: bytes | None = None) -> None:
 
         if is_animated:
             frames = [
-                image_obj.seek(keyframe) or image_obj.copy().convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE))
-                for keyframe in range(image_obj.n_frames) # type: ignore[attr-defined]
+                image_obj.seek(keyframe)
+                or image_obj.copy().convert("RGB").resize((MATRIX_SIZE, MATRIX_SIZE))
+                for keyframe in range(image_obj.n_frames)  # type: ignore[attr-defined]
             ]
 
             double_buffer = matrix.CreateFrameCanvas()
