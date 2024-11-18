@@ -32,13 +32,13 @@ def _decrease_boost(boost: int) -> int:
 def get_y_pos(y: int, input: bytes, prev_boost: int) -> tuple[int, int]:
     min_y = BORDER_TOP
     max_y = BORDER_BOTTOM - (BOOSTED_PADDLE_SIZE if prev_boost else PADDLE_SIZE)
-    if b"\x1b[A" in input and y > min_y:
+    if b"\x1b[A" in input and y >= min_y:
         return _decrease_boost(prev_boost), y - 1
-    elif b"z" in input and y > min_y and not prev_boost:
+    elif b"z" in input and y >= min_y and not prev_boost:
         return BOOST_FRAMES, max(y - BOOST_DIST + (PADDLE_SIZE - BOOSTED_PADDLE_SIZE), min_y)
-    elif b"\x1b[B" in input and y < max_y:
+    elif b"\x1b[B" in input and y <= max_y:
         return _decrease_boost(prev_boost), y + 1
-    elif b"s" in input and y < max_y and not prev_boost:
+    elif b"s" in input and y <= max_y and not prev_boost:
         return BOOST_FRAMES, min(y + BOOST_DIST, max_y)
     elif prev_boost == 1:  # Last boost frame: re-center paddle
         return 0, max(y - (PADDLE_SIZE - BOOSTED_PADDLE_SIZE) // 2, min_y)
@@ -48,13 +48,13 @@ def get_y_pos(y: int, input: bytes, prev_boost: int) -> tuple[int, int]:
 def get_x_pos(x: int, input: bytes, prev_boost: int) -> tuple[int, int]:
     min_x = BORDER_TOP
     max_x = BORDER_BOTTOM - (BOOSTED_PADDLE_SIZE if prev_boost else PADDLE_SIZE)
-    if b"\x1b[D" in input and x > min_x:
+    if b"\x1b[D" in input and x >= min_x:
         return _decrease_boost(prev_boost), x - 1
-    elif b"q" in input and x > min_x and not prev_boost:
+    elif b"q" in input and x >= min_x and not prev_boost:
         return BOOST_FRAMES, max(x - BOOST_DIST + (PADDLE_SIZE - BOOSTED_PADDLE_SIZE), min_x)
-    elif b"\x1b[C" in input and x < max_x:
+    elif b"\x1b[C" in input and x <= max_x:
         return _decrease_boost(prev_boost), x + 1
-    elif b"d" in input and x < max_x and not prev_boost:
+    elif b"d" in input and x <= max_x and not prev_boost:
         return BOOST_FRAMES, min(x + BOOST_DIST, max_x)
     elif prev_boost == 1:  # Last boost frame: re-center paddle
         return 0, max(x - (PADDLE_SIZE - BOOSTED_PADDLE_SIZE) // 2, min_x)
