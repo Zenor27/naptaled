@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from http import HTTPStatus
 from importlib import import_module
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -72,7 +72,9 @@ async def scripts() -> GetScriptsResponse:
 
 
 @app.post("/scripts/change", operation_id="post_change_script")
-async def change_script(script: str = Form(...), image: UploadFile | None = File(None)):
+async def change_script(
+    script: str = Form(...), image: Union[UploadFile, None] = File(None)
+):
     try:
         script_func = MATRIX_SCRIPTS[script]
 

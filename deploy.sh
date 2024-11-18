@@ -9,3 +9,4 @@ fi
 
 curl -X POST -H "Content-Type: application/json" -d '{"script":"off"}' http://192.168.128.175:8042/scripts/change
 git push piku --force
+curl -X POST -H "Content-Type: application/json" -d '{"script":"display_screensaver"}' http://192.168.128.175:8042/scripts/change
