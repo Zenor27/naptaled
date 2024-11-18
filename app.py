@@ -20,7 +20,7 @@ for file in sorted(THIS_DIR.glob("src/**/*.py")):
         import_module(module_path)
 
 
-DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_snow"]()
+DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_screensaver"]()
 
 
 _main_program_task: asyncio.Task[None]
@@ -59,38 +59,43 @@ class ScriptResponse(BaseModel):
 
 
 class GetScriptsResponse(BaseModel):
-    scripts: list[str]
+    scripts: list[dict[str, Any]]
     current_script: str
 
 
 @app.get("/scripts", operation_id="get_scripts")
 async def scripts() -> GetScriptsResponse:
     global _main_program_task
-    scripts = list(MATRIX_SCRIPTS.keys())
+    # Get information about each script
+    scripts_info = [
+        {
+            "name": script_name,
+            "requires_image": script_name in ["display_choose_image"],
+        }
+        for script_name in MATRIX_SCRIPTS.keys()
+    ]
     current_script = _main_program_task.get_name()
-    return GetScriptsResponse(scripts=scripts, current_script=current_script)
+    return GetScriptsResponse(scripts=scripts_info, current_script=current_script)
 
 
 @app.post("/scripts/change", operation_id="post_change_script")
 async def change_script(
-    script: str = Form(...), image: Union[UploadFile, None] = File(None)
+    script: str = Form(...),  # Keep this as required
+    image: UploadFile | None = File(None),
 ):
     try:
         script_func = MATRIX_SCRIPTS[script]
 
-        # If image is provided, pass it to the script
         if image:
-            # Read image content
             image_content = await image.read()
-            # Call script with image
             program = script_func(image=image_content)
         else:
-            # Call script without image
             program = script_func()
 
         switch_program(program)
         return "OK"
-    except KeyError:
+    except Exception as e:
         raise HTTPException(
-            HTTPStatus.UNPROCESSABLE_ENTITY, f"Unknown program: {script}"
+            status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
+            detail=f"Error processing request: {str(e)}",
         )
