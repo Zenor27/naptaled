@@ -17,7 +17,9 @@ const useScripts = () => {
         const formData = new FormData();
         formData.append('script', script);
         formData.append('image', image);
-        return postChangeScript({ body: formData });
+        return postChangeScript({ 
+          body: formData
+        });
       }
       
       // If no image, use the original JSON format

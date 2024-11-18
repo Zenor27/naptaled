@@ -2,7 +2,7 @@
 
 export type ChangeScriptRequest = {
     script: string;
-};
+} | FormData;
 
 export type GetScriptsResponse = {
     scripts: Array<(string)>;
