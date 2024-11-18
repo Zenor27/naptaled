@@ -6,7 +6,7 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -71,15 +71,24 @@ async def scripts() -> GetScriptsResponse:
     return GetScriptsResponse(scripts=scripts, current_script=current_script)
 
 
-class ChangeScriptRequest(BaseModel):
-    script: str
-
-
 @app.post("/scripts/change", operation_id="post_change_script")
-async def change_script(change_script_request: ChangeScriptRequest):
+async def change_script(script: str = Form(...), image: UploadFile | None = File(None)):
     try:
-        script = MATRIX_SCRIPTS[change_script_request.script]
+        script_func = MATRIX_SCRIPTS[script]
+
+        # If image is provided, pass it to the script
+        if image:
+            # Read image content
+            image_content = await image.read()
+            # Call script with image
+            program = script_func(image=image_content)
+        else:
+            # Call script without image
+            program = script_func()
+
+        switch_program(program)
+        return "OK"
     except KeyError:
-        raise HTTPException(HTTPStatus.UNPROCESSABLE_ENTITY, f"Unknown program: {change_script_request.script}")
-    switch_program(script())
-    return "OK"
+        raise HTTPException(
+            HTTPStatus.UNPROCESSABLE_ENTITY, f"Unknown program: {script}"
+        )
