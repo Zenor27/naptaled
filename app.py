@@ -27,13 +27,13 @@ DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_screensaver"]()
 @dataclass
 class ScriptState:
     name: str
-    image_content: bytes | None = None
-    task: asyncio.Task | None = None
+    image_content: Union[bytes, None] = None
+    task: Union[asyncio.Task, None] = None
 
 
 class ScriptManager:
     def __init__(self, default_script: str):
-        self.previous_state: ScriptState | None = None
+        self.previous_state: Union[ScriptState, None] = None
         self.current_state: ScriptState = ScriptState(name=default_script)
 
     def switch_to(self, new_state: ScriptState) -> None:
@@ -48,7 +48,7 @@ class ScriptManager:
     def can_undo(self) -> bool:
         return self.previous_state is not None
 
-    def undo(self) -> ScriptState | None:
+    def undo(self) -> Union[ScriptState, None]:
         if not self.can_undo():
             return None
 
