@@ -7,6 +7,6 @@ if ! git remote | grep -q piku; then
   exit 1
 fi
 
-curl -X POST -H "Content-Type: application/json" -d '{"script":"off"}' http://192.168.128.175:8042/scripts/change
+curl -X POST -F "script=off" http://192.168.128.175:8042/scripts/change --connect-timeout 10
 git push piku --force
-curl -X POST -H "Content-Type: application/json" -d '{"script":"display_screensaver"}' http://192.168.128.175:8042/scripts/change
+curl -X POST -F "script=display_screensaver" http://192.168.128.175:8042/scripts/change --connect-timeout 10
