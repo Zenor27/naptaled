@@ -87,7 +87,9 @@ export const Scripts = () => {
               key={script.name}
               onClick={() => {
                 console.log('Button clicked for script:', script.name);
-                changeScript(script.name);
+                if (!script.requires_image) {
+                  changeScript(script.name);
+                }
               }}
               disabled={
                 scripts.data?.current_script === script.name && 
