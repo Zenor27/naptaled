@@ -48,14 +48,9 @@ const useScripts = () => {
 
 export const Scripts = () => {
   const { scripts, isLoading, changeScript } = useScripts();
-  const [lastImageUpload, setLastImageUpload] = useState<number>(0);
+  const [selectedScript, setSelectedScript] = useState<string | null>(null);
   
   if (isLoading || !scripts) return <Loader />;
-
-  // Find currently running script info
-  const currentScript = scripts.data?.scripts.find(
-    script => script.name === scripts.data?.current_script
-  );
 
   return (
     <>
@@ -67,15 +62,14 @@ export const Scripts = () => {
         direction="column"
         wrap="wrap"
       >
-        {currentScript?.requires_image && (
+        {(selectedScript && scripts.data?.scripts.find(s => s.name === selectedScript)?.requires_image) && (
           <FileInput
             label="Upload Image"
             placeholder="Select image"
             accept="image/*"
             onChange={(file) => {
-              if (file) {
-                changeScript(currentScript.name, file);
-                setLastImageUpload(Date.now());
+              if (file && selectedScript) {
+                changeScript(selectedScript, file);
               }
             }}
           />
@@ -87,14 +81,14 @@ export const Scripts = () => {
               key={script.name}
               onClick={() => {
                 console.log('Button clicked for script:', script.name);
-                if (!script.requires_image) {
+                if (script.requires_image) {
+                  setSelectedScript(script.name);
+                } else {
                   changeScript(script.name);
+                  setSelectedScript(script.name);
                 }
               }}
-              disabled={
-                scripts.data?.current_script === script.name && 
-                (!script.requires_image || lastImageUpload === 0)
-              }
+              disabled={scripts.data?.current_script === script.name}
             >
               {script.name.replace(/_/g, " ").replace("display", "").toUpperCase()}
             </Button>
