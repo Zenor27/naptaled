@@ -8,4 +8,7 @@
     "python.analysis.typeCheckingMode": "standard",
     "ruff.lineLength": 120,
     "python.analysis.diagnosticMode": "workspace",
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff"
+      }
 }
