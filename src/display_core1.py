@@ -41,7 +41,7 @@ PATTERN_HEIGHT = len(PATTERN.splitlines())
 
 
 @matrix_script
-async def display_crepe(matrix: RGBMatrix) -> None:
+async def display_core1(matrix: RGBMatrix) -> None:
     RED = (255, 0, 0)
     OFF = (30, 30, 30)
     ON = (0, 0, 255)
@@ -62,4 +62,4 @@ async def display_crepe(matrix: RGBMatrix) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(display_crepe())
+    asyncio.run(display_core1())
