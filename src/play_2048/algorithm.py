@@ -2,7 +2,9 @@
 
 import enum
 import random
-from typing import NamedTuple, Optional, Self, Union
+from typing import NamedTuple, Optional, Union
+
+from typing_extensions import Self
 
 
 class Dir(enum.Enum):
