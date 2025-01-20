@@ -1,13 +1,14 @@
 import asyncio
+import os
 from collections.abc import Coroutine
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from http import HTTPStatus
 from importlib import import_module
 from pathlib import Path
 from typing import Any, Union
-from dataclasses import dataclass
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -19,9 +20,6 @@ for file in sorted(THIS_DIR.glob("src/**/*.py")):
     if file.stem != "__init__":
         module_path = ".".join(file.relative_to(THIS_DIR).parts).removesuffix(".py")
         import_module(module_path)
-
-
-DEFAULT_PROGRAM = MATRIX_SCRIPTS["display_screensaver"]()
 
 
 @dataclass
@@ -71,9 +69,11 @@ script_manager = ScriptManager("display_screensaver")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # Initialize with default program
+    program_name = os.getenv("PROGRAM", "screensaver")
+    program = MATRIX_SCRIPTS[f"display_{program_name}"]()
     script_state = ScriptState(
         name="display_screensaver",
-        task=asyncio.create_task(DEFAULT_PROGRAM, name=DEFAULT_PROGRAM.__name__),
+        task=asyncio.create_task(program, name=program.__name__),
     )
     script_manager.switch_to(script_state)
     try:

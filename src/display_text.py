@@ -21,8 +21,8 @@ async def display_text(matrix: RGBMatrix, my_text: str, font_name: str = "7x13")
         pos -= 1
         if pos + len < 0:
             pos = offscreen_canvas.width
-        await asyncio.sleep(0.05)
         offscreen_canvas = matrix.SwapOnVSync(offscreen_canvas)
+        await asyncio.sleep(0.05)
 
 
 if __name__ == "__main__":
