@@ -53,6 +53,7 @@ Host 192.168.10.223
 You are good to go, you can now deploy to the raspberry
 
 ```bash
+cd client && pnpm build
 git add <your changes>
 git commit -m "your message"
 ./deploy.sh
