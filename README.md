@@ -30,7 +30,7 @@ pnpm dev
 You first need to add your ssh public key on the raspberry
 
 ```bash
-ssh 192.168.128.175 -p 1030 -l napta
+ssh 192.168.10.223 -p 1030 -l napta
 sudo su - piku
 touch /tmp/<mysshkey>.pub
 python3 piku.py setup:ssh /tmp/<mysshkey>.pub
@@ -39,14 +39,14 @@ python3 piku.py setup:ssh /tmp/<mysshkey>.pub
 Then on your machine you need to add the remote
 
 ```bash
-git remote add piku piku@192.168.128.175:naptaled
+git remote add piku piku@192.168.10.223:naptaled
 ```
 
 And you need to add the following to your `~/.ssh/config`:
 
 ```
-Host 192.168.128.175
- Hostname 192.168.128.175
+Host 192.168.10.223
+ Hostname 192.168.10.223
  Port 1030
 ```
 
@@ -61,5 +61,5 @@ git commit -m "your message"
 To see logs running on the raspberry:
 
 ```bash
-ssh 192.168.128.175 -p 1030 -l piku logs naptaled
+ssh 192.168.10.223 -p 1030 -l piku logs naptaled
 ```
