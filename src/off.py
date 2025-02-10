@@ -8,14 +8,8 @@ from src.napta_matrix import RGBMatrix, matrix_script
 
 @matrix_script
 async def off(matrix: RGBMatrix) -> None:
-    await fullscreen_message(
-        matrix,
-        [
-            "Deployment",
-            "    in    ",
-            "progress!",
-        ],
-    )
+    matrix.SwapOnVSync(matrix.CreateFrameCanvas())
+
 
 
 if __name__ == "__main__":

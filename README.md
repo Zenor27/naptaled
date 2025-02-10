@@ -39,7 +39,7 @@ python3 piku.py setup:ssh /tmp/<mysshkey>.pub
 Then on your machine you need to add the remote
 
 ```bash
-git remote add piku piku@192.168.10.223:naptaled
+git remote add piku piku@192.168.10.223:1030/naptaled
 ```
 
 And you need to add the following to your `~/.ssh/config`:
