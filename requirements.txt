@@ -5,3 +5,4 @@ typing_extensions==4.12.2
 uvicorn==0.30.6
 python-multipart==0.0.17
 typing_extensions==4.12.2
+numpy==1.26.3
