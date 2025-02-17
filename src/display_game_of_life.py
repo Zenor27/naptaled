@@ -41,9 +41,10 @@ async def display_game_of_life(matrix: RGBMatrix) -> None:
     lifespan_matrix = state.astype(int)
     # state = np.zeros((64, 64), dtype=bool)
     # state[30, 30:33] = True  # A simple blinker pattern
+    double_buffer = matrix.CreateFrameCanvas()
     while True:
+        double_buffer.Clear()
         start = time.time()
-        double_buffer = matrix.CreateFrameCanvas()
         for y in range(64):
             for x in range(64):
                 GREEN = (9, 203, 156)
@@ -57,6 +58,7 @@ async def display_game_of_life(matrix: RGBMatrix) -> None:
         lifespan_matrix = np.where(state, lifespan_matrix + 1, 0)
 
         await asyncio.sleep(max(0, 0.3 - (time.time() - start)))
+
 
 
 
