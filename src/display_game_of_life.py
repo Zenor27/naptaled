@@ -1,10 +1,9 @@
 import asyncio
 import time
+from PIL import Image
+import numpy as np
 
 from src.napta_matrix import RGBMatrix, matrix_script
-
-
-import numpy as np
 
 
 def game_of_life_step(matrix_: np.ndarray) -> np.ndarray:
@@ -36,30 +35,40 @@ def draw_point(matrix: RGBMatrix, pix: tuple[int, int], color: tuple[int, int, i
 
 @matrix_script
 async def display_game_of_life(matrix: RGBMatrix) -> None:
-
     state = np.random.choice([False, True], size=(64, 64), p=[0.8, 0.2])
     lifespan_matrix = state.astype(int)
-    # state = np.zeros((64, 64), dtype=bool)
-    # state[30, 30:33] = True  # A simple blinker pattern
     double_buffer = matrix.CreateFrameCanvas()
+    
     while True:
-        double_buffer.Clear()
         start = time.time()
-        for y in range(64):
-            for x in range(64):
-                GREEN = (9, 203, 156)
-                
-                double_buffer.SetPixel(x, y, max(255- lifespan_matrix[y, x], 9), max(255 - lifespan_matrix[y, x], 203),  max(255 - lifespan_matrix[y, x], 156)) if state[y, x] else double_buffer.SetPixel(x, y, 0, 0, 0)
-                
-        # count all True in the matrix 
+        
+        # Create an RGB array for the entire grid at once
+        rgb_array = np.zeros((64, 64, 3), dtype=np.uint8)
+        
+        # Set colors for live cells based on lifespan
+        mask = state
+        r = np.maximum(255 - lifespan_matrix, 9) * mask
+        g = np.maximum(255 - lifespan_matrix, 203) * mask
+        b = np.maximum(255 - lifespan_matrix, 156) * mask
+        
+        # Assign colors to the RGB array
+        rgb_array[..., 0] = r
+        rgb_array[..., 1] = g
+        rgb_array[..., 2] = b
+        
+        # Convert the numpy array to an image
+        image = Image.fromarray(rgb_array.astype('uint8'), 'RGB')
+        
+        # Clear and set the entire image at once
+        double_buffer.Clear()
+        double_buffer.SetImage(image, 0, 0)
         matrix.SwapOnVSync(double_buffer)
 
+        # Calculate next state
         state = game_of_life_step(state)
         lifespan_matrix = np.where(state, lifespan_matrix + 1, 0)
 
         await asyncio.sleep(max(0, 0.3 - (time.time() - start)))
-
-
 
 
 if __name__ == "__main__":
