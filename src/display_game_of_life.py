@@ -37,7 +37,11 @@ def draw_point(matrix: RGBMatrix, pix: tuple[int, int], color: tuple[int, int, i
 async def display_game_of_life(matrix: RGBMatrix) -> None:
     state = np.random.choice([False, True], size=(64, 64), p=[0.8, 0.2])
     lifespan_matrix = state.astype(int)
-    double_buffer = matrix.CreateFrameCanvas()
+    
+    # Initialize two buffers to avoid flickering
+    offscreen_canvas1 = matrix.CreateFrameCanvas()
+    offscreen_canvas2 = matrix.CreateFrameCanvas()
+    current_canvas = offscreen_canvas1
     
     while True:
         start = time.time()
@@ -59,16 +63,21 @@ async def display_game_of_life(matrix: RGBMatrix) -> None:
         # Convert the numpy array to an image
         image = Image.fromarray(rgb_array.astype('uint8'), 'RGB')
         
-        # Clear and set the entire image at once
-        double_buffer.Clear()
-        double_buffer.SetImage(image, 0, 0)
-        matrix.SwapOnVSync(double_buffer)
-
+        # Swap to the inactive canvas
+        next_canvas = offscreen_canvas2 if current_canvas == offscreen_canvas1 else offscreen_canvas1
+        
+        # Set image directly without clearing first
+        next_canvas.SetImage(image, 0, 0)
+        
+        # Swap immediately to minimize flicker
+        current_canvas = matrix.SwapOnVSync(next_canvas)
+        
         # Calculate next state
         state = game_of_life_step(state)
         lifespan_matrix = np.where(state, lifespan_matrix + 1, 0)
-
-        await asyncio.sleep(max(0, 0.3 - (time.time() - start)))
+        
+        elapsed = time.time() - start
+        await asyncio.sleep(max(0, 0.3 - elapsed))
 
 
 if __name__ == "__main__":
